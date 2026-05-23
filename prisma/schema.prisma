@@ -1,7 +1,9 @@
 // ADSAT Staff Operations Platform — Phase 1 schema.
-// Better Auth canonical tables (User, Account, Session, Verification) are
-// generated via `npx @better-auth/cli generate` and merged in below.
-// Direct edits to those tables drift from auth config — regenerate instead.
+//
+// Better Auth canonical tables (User, Account, Session, Verification, RateLimit)
+// are emitted by `npx @better-auth/cli generate --config src/lib/server/auth.ts`.
+// Re-run the CLI whenever auth.ts changes user.additionalFields or rateLimit
+// storage settings; merge any new columns into the User model below by hand.
 
 generator client {
 	provider      = "prisma-client-js"
@@ -14,9 +16,100 @@ datasource db {
 	directUrl = env("DIRECT_URL")
 }
 
+// --- Better Auth canonical (generated; safe to edit columns, not table names) ---
+
+model User {
+	id            String    @id
+	name          String
+	email         String
+	emailVerified Boolean   @default(false)
+	image         String?
+	createdAt     DateTime  @default(now())
+	updatedAt     DateTime  @updatedAt
+
+	// additionalFields from src/lib/server/auth.ts:
+	role          String    @default("staff")
+	departmentId  String?
+	isActive      Boolean   @default(true)
+	lastSignInAt  DateTime?
+	phone         String?
+	photoUrl      String?
+	timeZone      String?   @default("UTC")
+
+	sessions      Session[]
+	accounts      Account[]
+	department    Department? @relation(fields: [departmentId], references: [id], onDelete: SetNull)
+
+	@@unique([email])
+	@@index([departmentId])
+	@@map("user")
+}
+
+model Session {
+	id        String   @id
+	expiresAt DateTime
+	token     String
+	createdAt DateTime @default(now())
+	updatedAt DateTime @updatedAt
+	ipAddress String?
+	userAgent String?
+	userId    String
+	user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+	@@unique([token])
+	@@index([userId])
+	@@map("session")
+}
+
+model Account {
+	id                    String    @id
+	accountId             String
+	providerId            String
+	userId                String
+	user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+	accessToken           String?
+	refreshToken          String?
+	idToken               String?
+	accessTokenExpiresAt  DateTime?
+	refreshTokenExpiresAt DateTime?
+	scope                 String?
+	password              String?
+	createdAt             DateTime  @default(now())
+	updatedAt             DateTime  @updatedAt
+
+	@@index([userId])
+	@@map("account")
+}
+
+model Verification {
+	id         String   @id
+	identifier String
+	value      String
+	expiresAt  DateTime
+	createdAt  DateTime @default(now())
+	updatedAt  DateTime @updatedAt
+
+	@@index([identifier])
+	@@map("verification")
+}
+
+model RateLimit {
+	id          String @id
+	key         String
+	count       Int
+	lastRequest BigInt
+
+	@@unique([key])
+	@@map("rateLimit")
+}
+
+// --- Domain models (hand-written) ---
+
 model Department {
 	id        String   @id @default(cuid())
 	name      String   @unique
 	createdAt DateTime @default(now())
 	updatedAt DateTime @updatedAt
+
+	users     User[]
 }
