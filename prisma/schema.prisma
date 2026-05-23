@@ -11,110 +11,133 @@
 // by hand.
 
 generator client {
-	provider      = "prisma-client-js"
-	binaryTargets = ["native", "rhel-openssl-3.0.x"]
+  provider      = "prisma-client-js"
+  binaryTargets = ["native", "rhel-openssl-3.0.x"]
 }
 
 datasource db {
-	provider  = "postgresql"
-	url       = env("DATABASE_URL")
-	directUrl = env("DIRECT_URL")
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
 }
 
 // --- Better Auth canonical (generated; safe to edit columns, not table names) ---
 
 model User {
-	id            String    @id
-	name          String
-	email         String
-	emailVerified Boolean   @default(false)
-	image         String?
-	createdAt     DateTime  @default(now())
-	updatedAt     DateTime  @updatedAt
+  id            String   @id
+  name          String
+  email         String
+  emailVerified Boolean  @default(false)
+  image         String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
 
-	// additionalFields from src/lib/server/auth.ts:
-	role          String    @default("staff")
-	departmentId  String?
-	isActive      Boolean   @default(true)
-	lastSignInAt  DateTime?
-	phone         String?
-	photoUrl      String?
-	timeZone      String?   @default("UTC")
+  // additionalFields from src/lib/server/auth.ts:
+  role         String    @default("staff")
+  departmentId String?
+  isActive     Boolean   @default(true)
+  lastSignInAt DateTime?
+  phone        String?
+  photoUrl     String?
+  timeZone     String?   @default("UTC")
 
-	sessions      Session[]
-	accounts      Account[]
-	department    Department? @relation(fields: [departmentId], references: [id], onDelete: SetNull)
+  sessions   Session[]
+  accounts   Account[]
+  department Department? @relation(fields: [departmentId], references: [id], onDelete: SetNull)
+  auditLogs  AuditLog[]
 
-	@@unique([email])
-	@@index([departmentId])
-	@@map("user")
+  @@unique([email])
+  @@index([departmentId])
+  @@map("user")
 }
 
 model Session {
-	id        String   @id
-	expiresAt DateTime
-	token     String
-	createdAt DateTime @default(now())
-	updatedAt DateTime @updatedAt
-	ipAddress String?
-	userAgent String?
-	userId    String
-	user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id        String   @id
+  expiresAt DateTime
+  token     String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  ipAddress String?
+  userAgent String?
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-	@@unique([token])
-	@@index([userId])
-	@@map("session")
+  @@unique([token])
+  @@index([userId])
+  @@map("session")
 }
 
 model Account {
-	id                    String    @id
-	accountId             String
-	providerId            String
-	userId                String
-	user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-	accessToken           String?
-	refreshToken          String?
-	idToken               String?
-	accessTokenExpiresAt  DateTime?
-	refreshTokenExpiresAt DateTime?
-	scope                 String?
-	password              String?
-	createdAt             DateTime  @default(now())
-	updatedAt             DateTime  @updatedAt
+  id                    String    @id
+  accountId             String
+  providerId            String
+  userId                String
+  user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  accessToken           String?
+  refreshToken          String?
+  idToken               String?
+  accessTokenExpiresAt  DateTime?
+  refreshTokenExpiresAt DateTime?
+  scope                 String?
+  password              String?
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
 
-	@@index([userId])
-	@@map("account")
+  @@index([userId])
+  @@map("account")
 }
 
 model Verification {
-	id         String   @id
-	identifier String
-	value      String
-	expiresAt  DateTime
-	createdAt  DateTime @default(now())
-	updatedAt  DateTime @updatedAt
+  id         String   @id
+  identifier String
+  value      String
+  expiresAt  DateTime
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
 
-	@@index([identifier])
-	@@map("verification")
+  @@index([identifier])
+  @@map("verification")
 }
 
 model RateLimit {
-	id          String @id
-	key         String
-	count       Int
-	lastRequest BigInt
+  id          String @id
+  key         String
+  count       Int
+  lastRequest BigInt
 
-	@@unique([key])
-	@@map("rateLimit")
+  @@unique([key])
+  @@map("rateLimit")
 }
 
 // --- Domain models (hand-written) ---
 
 model Department {
-	id        String   @id @default(cuid())
-	name      String   @unique
-	createdAt DateTime @default(now())
-	updatedAt DateTime @updatedAt
+  id        String   @id @default(cuid())
+  name      String   @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-	users     User[]
+  users User[]
+}
+
+// Append-only record of sensitive actions (PRD § 11.1, FR-AUDIT-1). Phase 2
+// writes the first rows (user invite/edit/role-change/deactivate/reactivate);
+// Phase 9 builds the /admin/audit viewer. Always written *inside the same
+// $transaction* as the mutation it logs (see src/lib/server/audit.ts) so
+// rollback covers both halves.
+model AuditLog {
+  id         String   @id @default(cuid())
+  actorId    String?
+  actor      User?    @relation(fields: [actorId], references: [id], onDelete: SetNull)
+  action     String
+  targetType String
+  targetId   String
+  beforeJson Json?
+  afterJson  Json?
+  createdAt  DateTime @default(now())
+
+  @@index([actorId, createdAt(sort: Desc)])
+  @@index([targetType, targetId])
+  @@index([action, createdAt(sort: Desc)])
+  @@map("audit_log")
 }
