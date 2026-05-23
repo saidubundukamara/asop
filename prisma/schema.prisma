@@ -46,6 +46,14 @@ model User {
   department Department? @relation(fields: [departmentId], references: [id], onDelete: SetNull)
   auditLogs  AuditLog[]
 
+  // Phase 3 — tasks back-relations. Named relations are required because the
+  // Task model references User twice (assignee vs assigner).
+  tasksAssigned        Task[]            @relation("TaskAssignee")
+  tasksCreated         Task[]            @relation("TaskAssigner")
+  taskStatusEvents     TaskStatusEvent[]
+  taskComments         TaskComment[]
+  taskTemplatesCreated TaskTemplate[]    @relation("TaskTemplateCreator")
+
   @@unique([email])
   @@index([departmentId])
   @@map("user")
@@ -117,7 +125,9 @@ model Department {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  users User[]
+  users         User[]
+  tasks         Task[]
+  taskTemplates TaskTemplate[]
 }
 
 // Append-only record of sensitive actions (PRD § 11.1, FR-AUDIT-1). Phase 2
@@ -140,4 +150,117 @@ model AuditLog {
   @@index([targetType, targetId])
   @@index([action, createdAt(sort: Desc)])
   @@map("audit_log")
+}
+
+// --- Phase 3 — Tasks (FR-TASK-1..9) ---
+//
+// Status uses a Prisma enum (not a string like User.role): unlike role,
+// task status isn't constrained by Better Auth additionalFields, so an enum
+// gives both a generated TS union and a DB-level CHECK.
+//
+// Description is tiptap-serialized HTML. Sanitize through
+// src/lib/server/sanitize.ts on every write before persisting.
+
+enum TaskStatus {
+  assigned
+  in_progress
+  submitted
+  completed
+  blocked
+  cancelled
+}
+
+enum TaskPriority {
+  low
+  medium
+  high
+}
+
+model TaskTemplate {
+  id                  String       @id @default(cuid())
+  name                String
+  defaultDescription  String?
+  defaultPriority     TaskPriority @default(medium)
+  defaultDepartmentId String?
+  defaultDepartment   Department?  @relation(fields: [defaultDepartmentId], references: [id], onDelete: SetNull)
+  dueDateOffsetDays   Int?
+  isArchived          Boolean      @default(false)
+  createdById         String?
+  createdBy           User?        @relation("TaskTemplateCreator", fields: [createdById], references: [id], onDelete: SetNull)
+  createdAt           DateTime     @default(now())
+  updatedAt           DateTime     @updatedAt
+
+  tasks Task[]
+
+  @@index([isArchived, name])
+  @@index([defaultDepartmentId])
+  @@map("task_template")
+}
+
+model Task {
+  id           String        @id @default(cuid())
+  title        String
+  description  String?
+  status       TaskStatus    @default(assigned)
+  priority     TaskPriority  @default(medium)
+  dueDate      DateTime?
+  // Restrict: deactivation (not deletion) is the supported lifecycle for users
+  // with live tasks (FR-USER-4). Belt-and-braces in case a future migration
+  // accidentally hard-deletes a user.
+  assigneeId   String
+  assignee     User          @relation("TaskAssignee", fields: [assigneeId], references: [id], onDelete: Restrict)
+  assignerId   String?
+  assigner     User?         @relation("TaskAssigner", fields: [assignerId], references: [id], onDelete: SetNull)
+  departmentId String?
+  department   Department?   @relation(fields: [departmentId], references: [id], onDelete: SetNull)
+  templateId   String?
+  template     TaskTemplate? @relation(fields: [templateId], references: [id], onDelete: SetNull)
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  completedAt  DateTime?
+  // FR-TASK-9 soft delete. 30-day purge cron lands with Phase 5 cron infra.
+  deletedAt    DateTime?
+
+  statusEvents TaskStatusEvent[]
+  comments     TaskComment[]
+
+  // PRD § 11.3 indexes
+  @@index([assigneeId, status])
+  @@index([dueDate])
+  @@index([assignerId])
+  @@index([departmentId, status])
+  @@index([deletedAt])
+  @@map("task")
+}
+
+model TaskStatusEvent {
+  id         String      @id @default(cuid())
+  taskId     String
+  task       Task        @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  fromStatus TaskStatus?
+  toStatus   TaskStatus
+  actorId    String?
+  actor      User?       @relation(fields: [actorId], references: [id], onDelete: SetNull)
+  note       String?
+  at         DateTime    @default(now())
+
+  @@index([taskId, at(sort: Desc)])
+  @@map("task_status_event")
+}
+
+model TaskComment {
+  id               String    @id @default(cuid())
+  taskId           String
+  task             Task      @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  authorId         String?
+  author           User?     @relation(fields: [authorId], references: [id], onDelete: SetNull)
+  body             String
+  // Resolved on write; Phase 5 reads to dispatch notifications.
+  mentionedUserIds String[]
+  createdAt        DateTime  @default(now())
+  editedAt         DateTime?
+  deletedAt        DateTime?
+
+  @@index([taskId, createdAt(sort: Desc)])
+  @@map("task_comment")
 }
