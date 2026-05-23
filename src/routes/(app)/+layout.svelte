@@ -7,7 +7,7 @@
 	let { children } = $props();
 </script>
 
-<div class="bg-background text-foreground min-h-dvh">
+<div class="min-h-dvh bg-background text-foreground">
 	<TopBar />
 
 	<div class="md:flex">
@@ -15,10 +15,7 @@
 
 		<!-- Scroll container. overscroll-behavior:contain prevents body bounce on
 		     iOS while letting nested lists pull-to-refresh later (Phase 8). -->
-		<main
-			class="flex-1 overflow-y-auto pb-20 md:pb-0"
-			style="overscroll-behavior: contain;"
-		>
+		<main class="flex-1 overflow-y-auto pb-20 md:pb-0" style="overscroll-behavior: contain;">
 			{@render children()}
 		</main>
 	</div>

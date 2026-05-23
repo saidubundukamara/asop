@@ -37,8 +37,14 @@ export default defineConfig(
 		}
 	},
 	{
-		// Override or add rule settings here, such as:
-		// 'svelte/button-has-type': 'error'
-		rules: {}
+		rules: {
+			// Static <a href="..."> hrefs don't need resolve() — the typed-route
+			// helper buys little for hand-written literals, and several Phase 1
+			// nav slots point at routes that don't exist yet (/tasks, /reports,
+			// /inbox, /profile) which would TS-error under resolve(). We keep
+			// the rule active for goto() / pushState() where typos are likelier
+			// to slip past review. Revisit when all primary routes solidify.
+			'svelte/no-navigation-without-resolve': ['error', { ignoreLinks: true }]
+		}
 	}
 );

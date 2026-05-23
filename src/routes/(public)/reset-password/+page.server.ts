@@ -2,10 +2,7 @@ import { fail, redirect } from '@sveltejs/kit';
 import { z } from 'zod';
 import { APIError } from 'better-auth/api';
 import { auth } from '$lib/server/auth';
-import {
-	checkPasswordPolicy,
-	passwordPolicyMessage
-} from '$lib/server/auth/password-policy';
+import { checkPasswordPolicy, passwordPolicyMessage } from '$lib/server/auth/password-policy';
 import type { Actions, PageServerLoad } from './$types';
 
 export const load: PageServerLoad = ({ url }) => {

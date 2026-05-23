@@ -16,7 +16,9 @@
 <Card.Root>
 	<Card.Header>
 		<Card.Title>Set a new password</Card.Title>
-		<Card.Description>Minimum 10 characters, at least one number, not a commonly-used password.</Card.Description>
+		<Card.Description
+			>Minimum 10 characters, at least one number, not a commonly-used password.</Card.Description
+		>
 	</Card.Header>
 	<Card.Content>
 		{#if form?.message}

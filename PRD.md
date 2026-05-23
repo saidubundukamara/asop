@@ -2,15 +2,15 @@
 
 ## 1. Document Control
 
-| Field | Value |
-|---|---|
-| **Product name** | ADSAT Staff Operations Platform (working title) |
-| **Client** | ADSAT Development Services |
-| **Author** | Christex Foundation (Engineering) |
-| **Document version** | 0.1 (draft) |
-| **Date** | 2026-05-23 |
-| **Status** | Draft — pending client review |
-| **Distribution** | Client stakeholders, build team |
+| Field                | Value                                           |
+| -------------------- | ----------------------------------------------- |
+| **Product name**     | ADSAT Staff Operations Platform (working title) |
+| **Client**           | ADSAT Development Services                      |
+| **Author**           | Christex Foundation (Engineering)               |
+| **Document version** | 0.1 (draft)                                     |
+| **Date**             | 2026-05-23                                      |
+| **Status**           | Draft — pending client review                   |
+| **Distribution**     | Client stakeholders, build team                 |
 
 This document is the single source of truth for v1 scope. Changes after sign-off require a written amendment.
 
@@ -214,6 +214,7 @@ Each requirement is written as a user story with explicit acceptance criteria. T
 **As an** admin or manager, **I want** to create and assign a task, **so that** a staff member knows what to do.
 
 Fields:
+
 - Title (required, 1–140 chars)
 - Description (optional, rich text — bold, italic, lists, links)
 - Assignee (single staff member, required)
@@ -223,6 +224,7 @@ Fields:
 - Attachments (optional, up to 10 files / 25 MB each)
 
 Behavior:
+
 - On save, task appears in assignee's "My Tasks" instantly.
 - Assignee receives an in-app and email notification (per their preferences).
 - Creator is recorded as the "assigner."
@@ -232,6 +234,7 @@ Behavior:
 States: `assigned` → `in_progress` → `submitted` → `completed`. Additional terminal/branch states: `blocked`, `cancelled`.
 
 Transitions:
+
 - Staff can move their own tasks: `assigned ↔ in_progress`, `in_progress → submitted`, any → `blocked`.
 - Admin/manager can move to any state, including `completed` and `cancelled`.
 - Each transition is timestamped and logged in the task's history.
@@ -302,6 +305,7 @@ Transitions:
 #### FR-REP-2: Report status lifecycle
 
 States: `draft` → `submitted` → `under_review` → (`approved` | `needs_revision`).
+
 - `needs_revision` → returns to author who can resubmit (transitions back to `submitted`).
 - `approved` is terminal but may be reopened by admin (logged).
 
@@ -322,6 +326,7 @@ States: `draft` → `submitted` → `under_review` → (`approved` | `needs_revi
 **As an** admin, **I want** to define structured templates per program, **so that** field staff capture consistent data.
 
 Supported field types (v1):
+
 - Short text (single line, with min/max length)
 - Long text (multi-line, with min/max length)
 - Number (with optional min/max)
@@ -335,6 +340,7 @@ Supported field types (v1):
 Per field: label, help text, required flag, default value (where applicable), display order.
 
 Template metadata:
+
 - Name, description, program/category, assigned reviewer role (manager / admin), active flag.
 - Versioning: editing a template after submissions exist creates a new version; old submissions remain on their original version.
 
@@ -365,6 +371,7 @@ Template metadata:
 #### FR-DASH-1: Staff dashboard
 
 On sign-in, staff sees:
+
 - "My open tasks" count (clickable → filtered task list)
 - "Due this week" count
 - "Reports awaiting revision" count
@@ -400,6 +407,7 @@ On sign-in, staff sees:
 #### FR-NOTIF-2: Email notifications
 
 Triggered events:
+
 - Task assigned to me
 - Task due tomorrow (one reminder per task; sent in the user's time zone at 8am local)
 - Task overdue (one reminder per task at 8am the day after the due date)
@@ -423,6 +431,7 @@ Emails are transactional (no marketing). Each email has a deep link back to the 
 #### FR-NOTIF-4: User notification preferences
 
 In profile settings:
+
 - Per channel (in-app / email / push): on / off per event category.
 - Quiet hours (start, end, time zone).
 - "Pause all non-critical notifications until [date]" toggle.
@@ -555,12 +564,12 @@ Listed without commitment. Build team should design v1 schemas with these in min
 
 Budgets (measured on a Moto G4 throttled to slow-4G simulation):
 
-| Metric | Target |
-|---|---|
-| Largest Contentful Paint | ≤ 2.5 s |
-| First Input Delay / INP | ≤ 200 ms |
-| Cumulative Layout Shift | ≤ 0.1 |
-| Time to Interactive | ≤ 4 s |
+| Metric                       | Target   |
+| ---------------------------- | -------- |
+| Largest Contentful Paint     | ≤ 2.5 s  |
+| First Input Delay / INP      | ≤ 200 ms |
+| Cumulative Layout Shift      | ≤ 0.1    |
+| Time to Interactive          | ≤ 4 s    |
 | Initial JS payload (gzipped) | ≤ 150 KB |
 
 Strategies: SvelteKit server-side rendering, code splitting per route, image optimization via Cloudinary transformations, careful client-side hydration.
@@ -599,12 +608,12 @@ Strategies: SvelteKit server-side rendering, code splitting per route, image opt
 
 ### 9.6 Browser & Device Support
 
-| Class | Support level |
-|---|---|
-| Latest 2 versions of Chrome, Edge, Firefox, Safari (desktop) | First-class |
-| Latest 2 versions of Chrome / Safari on Android / iOS | First-class |
-| Older mobile browsers (Android WebView ≥ 110) | Best-effort |
-| Internet Explorer 11 | Not supported |
+| Class                                                        | Support level |
+| ------------------------------------------------------------ | ------------- |
+| Latest 2 versions of Chrome, Edge, Firefox, Safari (desktop) | First-class   |
+| Latest 2 versions of Chrome / Safari on Android / iOS        | First-class   |
+| Older mobile browsers (Android WebView ≥ 110)                | Best-effort   |
+| Internet Explorer 11                                         | Not supported |
 
 Min viewport: 360 × 640 (mobile portrait).
 
@@ -702,31 +711,31 @@ This is conceptual, not the final Prisma schema. The build team will refine duri
 
 `R` = read, `W` = write/create, `U` = update, `D` = delete. Empty = not permitted.
 
-| Action / Resource | Admin | Manager | Staff |
-|---|---|---|---|
-| **User accounts** | R W U D | R (team) | R (self) U (self profile) |
-| **Invite user** | W | — | — |
-| **Change role** | U | — | — |
-| **Deactivate user** | U | — | — |
-| **Department / program** | R W U D | R | R |
-| **Task template** | R W U D | R | R |
-| **Task — own** | R W U D | R W U | R U (status only) |
-| **Task — assigned to me** | n/a | R W U | R U (status only) |
-| **Task — team** | R W U D | R W U | — |
-| **Task — all** | R W U D | — | — |
-| **Task comment** | R W U(15min) D | R W U(15min) | R W U(15min) |
-| **Reassign task** | U | U (team) | — |
-| **Report template** | R W U archive | R | R |
-| **Report — own (author)** | R W | R W | R W |
-| **Report — team submissions** | R U (review) | R U (review for team) | — |
-| **Report — all** | R | — | — |
-| **Report comment** | R W | R W | R W |
-| **Attachment — upload** | W | W | W |
-| **Attachment — delete** | D (any) | D (own) | D (own) |
-| **Search** | All scope | Team scope | Self scope |
-| **Notifications** | R (own) U | R (own) U | R (own) U |
-| **Audit log** | R, export | — | — |
-| **Org settings** | R W | — | — |
+| Action / Resource             | Admin          | Manager               | Staff                     |
+| ----------------------------- | -------------- | --------------------- | ------------------------- |
+| **User accounts**             | R W U D        | R (team)              | R (self) U (self profile) |
+| **Invite user**               | W              | —                     | —                         |
+| **Change role**               | U              | —                     | —                         |
+| **Deactivate user**           | U              | —                     | —                         |
+| **Department / program**      | R W U D        | R                     | R                         |
+| **Task template**             | R W U D        | R                     | R                         |
+| **Task — own**                | R W U D        | R W U                 | R U (status only)         |
+| **Task — assigned to me**     | n/a            | R W U                 | R U (status only)         |
+| **Task — team**               | R W U D        | R W U                 | —                         |
+| **Task — all**                | R W U D        | —                     | —                         |
+| **Task comment**              | R W U(15min) D | R W U(15min)          | R W U(15min)              |
+| **Reassign task**             | U              | U (team)              | —                         |
+| **Report template**           | R W U archive  | R                     | R                         |
+| **Report — own (author)**     | R W            | R W                   | R W                       |
+| **Report — team submissions** | R U (review)   | R U (review for team) | —                         |
+| **Report — all**              | R              | —                     | —                         |
+| **Report comment**            | R W            | R W                   | R W                       |
+| **Attachment — upload**       | W              | W                     | W                         |
+| **Attachment — delete**       | D (any)        | D (own)               | D (own)                   |
+| **Search**                    | All scope      | Team scope            | Self scope                |
+| **Notifications**             | R (own) U      | R (own) U             | R (own) U                 |
+| **Audit log**                 | R, export      | —                     | —                         |
+| **Org settings**              | R W            | —                     | —                         |
 
 RBAC is enforced **server-side** in every SvelteKit load function and form action.
 
@@ -905,17 +914,17 @@ In `hooks.server.ts`:
 
 ## 16. Integrations Summary
 
-| Concern | Service | Notes |
-|---|---|---|
-| Database | Neon Postgres | Vercel Marketplace integration; env vars auto-provisioned. |
-| Auth | Better Auth | npm package; Prisma adapter; tables in the same DB. |
-| File / image storage | Cloudinary | Direct browser uploads via signed presets. |
-| Transactional email | Resend (recommended) | Or Postmark/SendGrid if client preference. DNS setup required. |
-| Push notifications | Web Push (browser-native) | No third-party SaaS needed. VAPID keys generated and stored as env vars. |
-| Hosting / serverless | Vercel | SvelteKit adapter; Fluid Compute. |
-| Scheduled jobs | Vercel Cron | Configured in `vercel.ts` or `vercel.json`. |
-| Error monitoring | Sentry or Vercel observability | To confirm during setup. |
-| Domain | TBD | Open question #2. |
+| Concern              | Service                        | Notes                                                                    |
+| -------------------- | ------------------------------ | ------------------------------------------------------------------------ |
+| Database             | Neon Postgres                  | Vercel Marketplace integration; env vars auto-provisioned.               |
+| Auth                 | Better Auth                    | npm package; Prisma adapter; tables in the same DB.                      |
+| File / image storage | Cloudinary                     | Direct browser uploads via signed presets.                               |
+| Transactional email  | Resend (recommended)           | Or Postmark/SendGrid if client preference. DNS setup required.           |
+| Push notifications   | Web Push (browser-native)      | No third-party SaaS needed. VAPID keys generated and stored as env vars. |
+| Hosting / serverless | Vercel                         | SvelteKit adapter; Fluid Compute.                                        |
+| Scheduled jobs       | Vercel Cron                    | Configured in `vercel.ts` or `vercel.json`.                              |
+| Error monitoring     | Sentry or Vercel observability | To confirm during setup.                                                 |
+| Domain               | TBD                            | Open question #2.                                                        |
 
 ---
 
@@ -943,30 +952,30 @@ In `hooks.server.ts`:
 
 Measurable indicators for the first 90 days post-launch. We will revisit targets after one month of real data.
 
-| Metric | Target | How measured |
-|---|---|---|
-| Weekly active users | ≥ 80% of active staff use the app at least once per week | Sign-in events |
-| Task completion on time | ≥ 70% of tasks completed by their due date | Computed from task data |
-| Report submission within SLA | ≥ 80% of expected reports submitted by their template's SLA | Computed |
-| Median report review turnaround | ≤ 48 hours | Computed |
-| Server error rate | ≤ 0.5% of requests | Vercel / Sentry |
-| PWA install rate (mobile users) | ≥ 50% of mobile staff install within 4 weeks | `appinstalled` event tracked |
-| Stakeholder satisfaction | Director reports the platform has reduced operational overhead | Qualitative review at 30, 60, 90 days |
+| Metric                          | Target                                                         | How measured                          |
+| ------------------------------- | -------------------------------------------------------------- | ------------------------------------- |
+| Weekly active users             | ≥ 80% of active staff use the app at least once per week       | Sign-in events                        |
+| Task completion on time         | ≥ 70% of tasks completed by their due date                     | Computed from task data               |
+| Report submission within SLA    | ≥ 80% of expected reports submitted by their template's SLA    | Computed                              |
+| Median report review turnaround | ≤ 48 hours                                                     | Computed                              |
+| Server error rate               | ≤ 0.5% of requests                                             | Vercel / Sentry                       |
+| PWA install rate (mobile users) | ≥ 50% of mobile staff install within 4 weeks                   | `appinstalled` event tracked          |
+| Stakeholder satisfaction        | Director reports the platform has reduced operational overhead | Qualitative review at 30, 60, 90 days |
 
 ---
 
 ## 19. Risks & Mitigations
 
-| Risk | Likelihood | Impact | Mitigation |
-|---|---|---|---|
-| Better Auth is younger than NextAuth / Lucia — fewer community recipes for edge cases | Med | Med | Stick to documented patterns; budget time for auth-specific testing; have fallback plan to swap auth provider if a critical blocker is hit. |
-| Cloudinary free-tier transformation / storage limits exceeded | Low–Med | Low | Monitor monthly usage; upgrade tier if needed; pre-set transformations economically (a few breakpoints, not on-demand random sizes). |
-| Low-bandwidth field use makes the app feel slow | Med | High | Aggressive code splitting, PWA caching, image-size budgets, offline drafts. Real-device testing on throttled networks. |
-| Push notification support inconsistent on iOS Safari | High | Low | Web Push on iOS works only for installed PWAs and only on iOS 16.4+. Communicate this clearly; fall back to email + in-app for unsupported devices. |
-| Schema changes after launch break offline drafts | Med | Med | Version offline-cached drafts; migrate or discard incompatible drafts with user notice. |
-| Single admin (director) becomes a bottleneck for setup | Med | Low | Provide a clear onboarding checklist; consider a "co-admin" feature post-v1 if needed. |
-| Email deliverability issues at launch (new sender domain) | Med | Med | Configure SPF, DKIM, DMARC before launch; warm up sending; use Resend's reputation. |
-| Data residency concerns from client | Low | Med | Confirm Neon region during setup (open question #5). Document where data lives. |
+| Risk                                                                                  | Likelihood | Impact | Mitigation                                                                                                                                          |
+| ------------------------------------------------------------------------------------- | ---------- | ------ | --------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Better Auth is younger than NextAuth / Lucia — fewer community recipes for edge cases | Med        | Med    | Stick to documented patterns; budget time for auth-specific testing; have fallback plan to swap auth provider if a critical blocker is hit.         |
+| Cloudinary free-tier transformation / storage limits exceeded                         | Low–Med    | Low    | Monitor monthly usage; upgrade tier if needed; pre-set transformations economically (a few breakpoints, not on-demand random sizes).                |
+| Low-bandwidth field use makes the app feel slow                                       | Med        | High   | Aggressive code splitting, PWA caching, image-size budgets, offline drafts. Real-device testing on throttled networks.                              |
+| Push notification support inconsistent on iOS Safari                                  | High       | Low    | Web Push on iOS works only for installed PWAs and only on iOS 16.4+. Communicate this clearly; fall back to email + in-app for unsupported devices. |
+| Schema changes after launch break offline drafts                                      | Med        | Med    | Version offline-cached drafts; migrate or discard incompatible drafts with user notice.                                                             |
+| Single admin (director) becomes a bottleneck for setup                                | Med        | Low    | Provide a clear onboarding checklist; consider a "co-admin" feature post-v1 if needed.                                                              |
+| Email deliverability issues at launch (new sender domain)                             | Med        | Med    | Configure SPF, DKIM, DMARC before launch; warm up sending; use Resend's reputation.                                                                 |
+| Data residency concerns from client                                                   | Low        | Med    | Confirm Neon region during setup (open question #5). Document where data lives.                                                                     |
 
 ---
 
@@ -988,22 +997,22 @@ Pending client input before / during implementation:
 
 ## 21. Glossary
 
-| Term | Definition |
-|---|---|
-| **Admin** | A user with full platform access. Typically the director. |
-| **Manager** | A user who can assign tasks and review reports for their team. |
-| **Staff** | A user who receives tasks and submits reports. |
-| **Department / Program** | A grouping that scopes templates and reporting (e.g. "Community Outreach", "Engineering Services"). |
-| **Task** | A unit of work assigned to a single staff member with a status lifecycle. |
-| **Task template** | A reusable shape for tasks repeated across a program. |
-| **Report** | A structured submission from a staff member, filling out fields defined by a report template. |
-| **Report template** | A configurable form definition (fields, types, required flags) used to standardize reporting. |
-| **Attachment** | A file or image associated with a task, report, or comment, stored in Cloudinary. |
-| **Notification** | A message delivered to a user via in-app, email, or push channels. |
-| **Audit log** | An admin-visible record of sensitive actions taken in the system. |
-| **PWA** | Progressive Web App — installable on mobile home screens with offline capabilities. |
-| **RBAC** | Role-Based Access Control. |
-| **SLA** | Service-Level Agreement; here, the expected window for a given event (e.g. report review turnaround). |
+| Term                     | Definition                                                                                            |
+| ------------------------ | ----------------------------------------------------------------------------------------------------- |
+| **Admin**                | A user with full platform access. Typically the director.                                             |
+| **Manager**              | A user who can assign tasks and review reports for their team.                                        |
+| **Staff**                | A user who receives tasks and submits reports.                                                        |
+| **Department / Program** | A grouping that scopes templates and reporting (e.g. "Community Outreach", "Engineering Services").   |
+| **Task**                 | A unit of work assigned to a single staff member with a status lifecycle.                             |
+| **Task template**        | A reusable shape for tasks repeated across a program.                                                 |
+| **Report**               | A structured submission from a staff member, filling out fields defined by a report template.         |
+| **Report template**      | A configurable form definition (fields, types, required flags) used to standardize reporting.         |
+| **Attachment**           | A file or image associated with a task, report, or comment, stored in Cloudinary.                     |
+| **Notification**         | A message delivered to a user via in-app, email, or push channels.                                    |
+| **Audit log**            | An admin-visible record of sensitive actions taken in the system.                                     |
+| **PWA**                  | Progressive Web App — installable on mobile home screens with offline capabilities.                   |
+| **RBAC**                 | Role-Based Access Control.                                                                            |
+| **SLA**                  | Service-Level Agreement; here, the expected window for a given event (e.g. report review turnaround). |
 
 ---
 
@@ -1024,4 +1033,4 @@ To help with downstream planning, here are sensible build-order groupings. Phasi
 
 ---
 
-*End of document.*
+_End of document._

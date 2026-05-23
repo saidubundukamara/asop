@@ -1,9 +1,14 @@
 // ADSAT Staff Operations Platform — Phase 1 schema.
 //
 // Better Auth canonical tables (User, Account, Session, Verification, RateLimit)
-// are emitted by `npx @better-auth/cli generate --config src/lib/server/auth.ts`.
-// Re-run the CLI whenever auth.ts changes user.additionalFields or rateLimit
-// storage settings; merge any new columns into the User model below by hand.
+// are emitted by `npm run auth:generate` (a thin wrapper around
+// `@better-auth/cli generate --config src/lib/server/auth-cli.ts`). The CLI
+// points at auth-cli.ts — not auth.ts — because auth.ts pulls in $app/server
+// for the sveltekitCookies plugin, which jiti can't resolve.
+//
+// Re-run the CLI whenever auth-config.ts changes user.additionalFields or
+// rateLimit storage settings; merge any new columns into the User model below
+// by hand.
 
 generator client {
 	provider      = "prisma-client-js"

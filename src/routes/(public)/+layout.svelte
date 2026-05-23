@@ -5,12 +5,12 @@
 </script>
 
 <div
-	class="bg-background text-foreground flex min-h-dvh flex-col items-center justify-center px-4"
+	class="flex min-h-dvh flex-col items-center justify-center bg-background px-4 text-foreground"
 	style="padding-top: max(var(--safe-top), 2rem); padding-bottom: max(var(--safe-bottom), 2rem);"
 >
 	<div class="mb-8 flex items-center gap-2 font-semibold tracking-tight">
 		<span
-			class="bg-primary text-primary-foreground inline-flex size-7 items-center justify-center rounded-md text-xs font-bold"
+			class="inline-flex size-7 items-center justify-center rounded-md bg-primary text-xs font-bold text-primary-foreground"
 			>A</span
 		>
 		<span>ADSAT Ops</span>

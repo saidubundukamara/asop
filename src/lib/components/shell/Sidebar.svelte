@@ -6,7 +6,7 @@
 
 <aside
 	aria-label="Primary"
-	class="bg-sidebar text-sidebar-foreground sticky top-14 hidden h-[calc(100dvh-3.5rem)] w-56 shrink-0 border-r p-3 md:flex md:flex-col"
+	class="sticky top-14 hidden h-[calc(100dvh-3.5rem)] w-56 shrink-0 border-r bg-sidebar p-3 text-sidebar-foreground md:flex md:flex-col"
 	style="padding-left: max(var(--safe-left), 0.75rem); padding-top: calc(0.75rem + var(--safe-top));"
 >
 	<nav class="flex flex-col gap-0.5">

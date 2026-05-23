@@ -2,7 +2,7 @@
 
 ## Context
 
-This plan translates `PRD.md` v0.1 into a build-ready sequence for the ADSAT Staff Operations Platform — a private, mobile-first PWA delivered by Christex Foundation to ADSAT Development Services. The PRD specifies *what* to build and the acceptance criteria; this document specifies *how* and in *what order*, with particular attention to making the mobile PWA feel like a native app rather than a responsive website.
+This plan translates `PRD.md` v0.1 into a build-ready sequence for the ADSAT Staff Operations Platform — a private, mobile-first PWA delivered by Christex Foundation to ADSAT Development Services. The PRD specifies _what_ to build and the acceptance criteria; this document specifies _how_ and in _what order_, with particular attention to making the mobile PWA feel like a native app rather than a responsive website.
 
 Decisions locked with the client engineer before drafting:
 
@@ -19,19 +19,19 @@ Non-goals (PRD § 4.2) are excluded from this plan per request.
 
 Locked by PRD § 14; restated for fast lookup during build.
 
-| Concern | Choice |
-|---|---|
-| App framework | SvelteKit (Node adapter, Vercel) + Svelte 5 runes, TS strict |
-| UI primitives | shadcn-svelte + Tailwind + lucide-svelte |
-| Auth | Better Auth (Prisma adapter) |
-| DB / ORM | Neon Postgres + Prisma (pooled URL for app, direct URL for migrations) |
-| Files | Cloudinary (signed upload presets, direct browser → Cloudinary) |
-| Email | Resend (Svelte component templates) |
-| Hosting | Vercel + Vercel Cron + Web Analytics |
-| Push | Web Push (VAPID, no SaaS) |
-| Validation | zod in every form action |
-| Testing | Vitest (unit) + Playwright (E2E on critical flows) |
-| Package mgr | pnpm |
+| Concern       | Choice                                                                 |
+| ------------- | ---------------------------------------------------------------------- |
+| App framework | SvelteKit (Node adapter, Vercel) + Svelte 5 runes, TS strict           |
+| UI primitives | shadcn-svelte + Tailwind + lucide-svelte                               |
+| Auth          | Better Auth (Prisma adapter)                                           |
+| DB / ORM      | Neon Postgres + Prisma (pooled URL for app, direct URL for migrations) |
+| Files         | Cloudinary (signed upload presets, direct browser → Cloudinary)        |
+| Email         | Resend (Svelte component templates)                                    |
+| Hosting       | Vercel + Vercel Cron + Web Analytics                                   |
+| Push          | Web Push (VAPID, no SaaS)                                              |
+| Validation    | zod in every form action                                               |
+| Testing       | Vitest (unit) + Playwright (E2E on critical flows)                     |
+| Package mgr   | pnpm                                                                   |
 
 ---
 
@@ -63,13 +63,13 @@ The `(app)` shell renders:
 
 Exactly 5 slots so spacing stays even. The 5th slot ("Me") is the user avatar + settings + sign-out.
 
-| Slot | Staff | Manager | Admin |
-|---|---|---|---|
-| 1 | Home | Home | Home |
-| 2 | Tasks | Tasks (team) | Tasks (all) |
-| 3 | Reports | Review | Reports |
-| 4 | Inbox (notifications) | Inbox | Inbox |
-| 5 | Me | Me | Me (Admin section reached via Me → Admin) |
+| Slot | Staff                 | Manager      | Admin                                     |
+| ---- | --------------------- | ------------ | ----------------------------------------- |
+| 1    | Home                  | Home         | Home                                      |
+| 2    | Tasks                 | Tasks (team) | Tasks (all)                               |
+| 3    | Reports               | Review       | Reports                                   |
+| 4    | Inbox (notifications) | Inbox        | Inbox                                     |
+| 5    | Me                    | Me           | Me (Admin section reached via Me → Admin) |
 
 Admin's deeper destinations (audit, settings, templates, staff directory) live under a "More" screen reached from "Me" on mobile, and the sidebar on desktop. This keeps the tab bar uncluttered.
 
@@ -436,17 +436,17 @@ Before declaring the platform launch-ready, run this top-to-bottom:
 
 These remain blockers for specific phases. Resolve as part of Phase 1 setup wherever possible.
 
-| PRD Q# | Blocks | Needed by |
-|---|---|---|
-| #1 Branding | Visual system finalization | Phase 1 (or use placeholder + swap) |
-| #2 Domain | Vercel domain + email links | Phase 1 |
-| #3 Email sender | Resend DNS | Phase 1 |
-| #5 Data residency | Neon region | Phase 1 (before first migration) |
-| #6 Seed templates | Realistic Phase 10 launch | Phase 10 |
-| #7 Pilot users | Pilot rollout | Phase 10 |
-| #8 Migration cut-over | Launch plan | Phase 10 |
-| #9 Director training | Launch readiness | Phase 10 |
+| PRD Q#                | Blocks                      | Needed by                           |
+| --------------------- | --------------------------- | ----------------------------------- |
+| #1 Branding           | Visual system finalization  | Phase 1 (or use placeholder + swap) |
+| #2 Domain             | Vercel domain + email links | Phase 1                             |
+| #3 Email sender       | Resend DNS                  | Phase 1                             |
+| #5 Data residency     | Neon region                 | Phase 1 (before first migration)    |
+| #6 Seed templates     | Realistic Phase 10 launch   | Phase 10                            |
+| #7 Pilot users        | Pilot rollout               | Phase 10                            |
+| #8 Migration cut-over | Launch plan                 | Phase 10                            |
+| #9 Director training  | Launch readiness            | Phase 10                            |
 
 ---
 
-*End of plan.*
+_End of plan._

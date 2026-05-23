@@ -6,7 +6,7 @@
 
 <nav
 	aria-label="Primary"
-	class="bg-background/95 fixed inset-x-0 bottom-0 z-30 grid grid-cols-5 border-t backdrop-blur-md md:hidden"
+	class="fixed inset-x-0 bottom-0 z-30 grid grid-cols-5 border-t bg-background/95 backdrop-blur-md md:hidden"
 	style="padding-bottom: var(--safe-bottom);"
 >
 	{#each primaryNav as item (item.href)}

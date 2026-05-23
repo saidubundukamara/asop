@@ -8,8 +8,8 @@ This repo is the **ADSAT Staff Operations Platform** (working name `asop`) — a
 
 The **source of truth** for what to build is split across two documents at the repo root — read both before making non-trivial changes:
 
-- `PRD.md` — *what* (v0.1, draft): scope, roles, functional requirements (`FR-*` IDs), tech-stack lock (§ 14), RBAC matrix (§ 12), cross-cutting patterns (§ 15), launch metrics (§ 18).
-- `IMPLEMENTATION_PLAN.md` — *how and in what order*: build phases 1–10, the load-bearing PWA shell spec (§ 2), the architectural patterns to establish in Phase 1 and reuse forever (§ 3), and a representative file tree (§ 6).
+- `PRD.md` — _what_ (v0.1, draft): scope, roles, functional requirements (`FR-*` IDs), tech-stack lock (§ 14), RBAC matrix (§ 12), cross-cutting patterns (§ 15), launch metrics (§ 18).
+- `IMPLEMENTATION_PLAN.md` — _how and in what order_: build phases 1–10, the load-bearing PWA shell spec (§ 2), the architectural patterns to establish in Phase 1 and reuse forever (§ 3), and a representative file tree (§ 6).
 
 When the PRD and the plan conflict, the PRD wins for scope; the plan wins for structure/sequencing.
 
@@ -42,7 +42,7 @@ These are the patterns every later phase relies on. When you write the first ins
 - **Route groups**: `src/routes/(public)/` for unauthenticated pages, `src/routes/(app)/` for the authenticated shell. `(app)/+layout.server.ts` is the auth guard; `(app)/admin/+layout.server.ts` is the admin role gate. Both re-assert server-side — never trust client role.
 - **Data flow**: every page reads via `+page.server.ts` `load`. Every mutation is a form action wrapped in a `withAction(handler)` helper (in `src/lib/server/actions.ts`) that does zod-parse → `requireRole`/ownership check → Prisma transaction (write + audit + notification enqueue) → `{ ok: true }` or `fail(400, { issues })`.
 - **RBAC as code**: `src/lib/server/rbac.ts` exposes `can(user, action, resource)` and is the single source of truth used by both server guards and UI affordance rendering.
-- **Audit log**: `src/lib/server/audit.ts` `audit({ actor, action, target, before, after })` is called *inside the same Prisma transaction* as the mutation it logs.
+- **Audit log**: `src/lib/server/audit.ts` `audit({ actor, action, target, before, after })` is called _inside the same Prisma transaction_ as the mutation it logs.
 - **Notifications**: `src/lib/server/notify.ts` writes the in-app `Notification` row synchronously, then dispatches email/push asynchronously via `waitUntil`. Email/push failures are caught and logged — `notify` must never throw out of the form action.
 - **Uploads**: browser uploads bypass the app server. Flow is `POST /api/uploads/sign` (auth'd, returns signed params) → browser PUTs bytes directly to Cloudinary → `POST /api/attachments` records `(ownerType, ownerId, public_id, secure_url)`. A single `<FileDropzone>` component owns the two-step dance.
 - **Auth in components**: read `user` from `$page.data.user` (populated by `(app)/+layout.server.ts`) — do not prop-drill.
@@ -59,6 +59,6 @@ These are the patterns every later phase relies on. When you write the first ins
 - Runes mode is forced everywhere outside `node_modules` (`svelte.config.js`). Use `$state`, `$derived`, `$props`, `$effect` — not legacy `let`/reactive `$:` declarations — in any new component.
 - `tsconfig.json` is strict and has `allowJs`/`checkJs` on. Type errors in `.js` files will fail `npm run check`.
 
-## What's *not* in v1 (PRD § 4.2)
+## What's _not_ in v1 (PRD § 4.2)
 
 Native iOS/Android apps, time tracking, leave management, performance reviews, client portals, public report sharing, SSO (email+password only), multi-tenant, third-party API, real-time chat, advanced BI. If a request touches any of these, flag it as out-of-scope before implementing.

@@ -19,11 +19,14 @@
 </script>
 
 <header
-	class="bg-background/80 sticky top-0 z-30 flex h-14 items-center gap-2 border-b px-4 backdrop-blur-md md:px-6"
+	class="sticky top-0 z-30 flex h-14 items-center gap-2 border-b bg-background/80 px-4 backdrop-blur-md md:px-6"
 	style="padding-top: var(--safe-top);"
 >
 	<a href="/dashboard" class="flex items-center gap-2 font-semibold tracking-tight">
-		<span class="bg-primary text-primary-foreground inline-flex size-7 items-center justify-center rounded-md text-xs font-bold">A</span>
+		<span
+			class="inline-flex size-7 items-center justify-center rounded-md bg-primary text-xs font-bold text-primary-foreground"
+			>A</span
+		>
 		<span class="hidden sm:inline">ADSAT Ops</span>
 	</a>
 
@@ -36,7 +39,11 @@
 	<DropdownMenu.Root>
 		<DropdownMenu.Trigger>
 			{#snippet child({ props })}
-				<button {...props} class="rounded-full outline-none focus-visible:ring-2 focus-visible:ring-ring" aria-label="User menu">
+				<button
+					{...props}
+					class="rounded-full outline-none focus-visible:ring-2 focus-visible:ring-ring"
+					aria-label="User menu"
+				>
 					<Avatar>
 						<AvatarFallback>{initials}</AvatarFallback>
 					</Avatar>
@@ -46,7 +53,7 @@
 		<DropdownMenu.Content align="end" class="w-56">
 			<DropdownMenu.Label>
 				<div class="text-sm font-medium">{user?.name ?? user?.email}</div>
-				<div class="text-muted-foreground text-xs">{user?.role}</div>
+				<div class="text-xs text-muted-foreground">{user?.role}</div>
 			</DropdownMenu.Label>
 			<DropdownMenu.Separator />
 			<DropdownMenu.Item>

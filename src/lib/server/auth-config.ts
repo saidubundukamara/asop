@@ -85,6 +85,10 @@ export const baseAuthConfig = {
 		window: 60,
 		max: 100,
 		storage: 'database',
+		// FR-AUTH-1: "after 5 failed attempts within 10 minutes". Better Auth's
+		// counter has fence-post quirks empirically — max:5 → 4 attempts allowed,
+		// max:6 → 6. We pick max:5 (stricter side) to err toward security; one
+		// fewer brute-force guess beats one more.
 		customRules: {
 			'/sign-in/email': { window: 600, max: 5 },
 			'/forget-password': { window: 600, max: 5 },
@@ -97,22 +101,20 @@ export const baseAuthConfig = {
 		// Better Auth's native `minPasswordLength` above; common-password check
 		// is handled by the haveIBeenPwned plugin below.
 		before: createAuthMiddleware(async (ctx) => {
-			const policed = new Set([
-				'/sign-up/email',
-				'/reset-password',
-				'/change-password'
-			]);
+			const policed = new Set(['/sign-up/email', '/reset-password', '/change-password']);
 			if (!policed.has(ctx.path)) return;
 
 			const body = ctx.body as { password?: string; newPassword?: string } | undefined;
 			const candidate = body?.password ?? body?.newPassword;
 			if (typeof candidate !== 'string') return;
 
-			const issues = checkPasswordPolicy(candidate);
-			const blockingIssue = issues.find((i) => i === 'no-digit') ?? issues[0];
-			if (blockingIssue) {
+			// checkPasswordPolicy returns issues in [too-short, no-digit] order;
+			// surface them in that order so the user sees the more obvious
+			// failure first.
+			const [firstIssue] = checkPasswordPolicy(candidate);
+			if (firstIssue) {
 				throw new APIError('BAD_REQUEST', {
-					message: passwordPolicyMessage(blockingIssue)
+					message: passwordPolicyMessage(firstIssue)
 				});
 			}
 		})

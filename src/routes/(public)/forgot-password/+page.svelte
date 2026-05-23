@@ -22,11 +22,11 @@
 		{#if form && 'sent' in form && form.sent}
 			<Alert.Root class="mb-4">
 				<Alert.Description>
-					If <span class="font-medium">{form.email}</span> matches an account, we sent a link to
-					reset the password. Check your inbox.
+					If <span class="font-medium">{form.email}</span> matches an account, we sent a link to reset
+					the password. Check your inbox.
 				</Alert.Description>
 			</Alert.Root>
-			<a href="/sign-in" class="text-muted-foreground text-sm hover:underline">Back to sign in</a>
+			<a href="/sign-in" class="text-sm text-muted-foreground hover:underline">Back to sign in</a>
 		{:else}
 			{#if form && 'message' in form && form.message}
 				<Alert.Root variant="destructive" class="mb-4">
@@ -58,7 +58,7 @@
 				<Button type="submit" disabled={submitting}>
 					{submitting ? 'Sending…' : 'Send reset link'}
 				</Button>
-				<a href="/sign-in" class="text-muted-foreground text-center text-sm hover:underline"
+				<a href="/sign-in" class="text-center text-sm text-muted-foreground hover:underline"
 					>Back to sign in</a
 				>
 			</form>

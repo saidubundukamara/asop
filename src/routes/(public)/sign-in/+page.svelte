@@ -54,7 +54,7 @@
 			<div class="grid gap-1.5">
 				<div class="flex items-center justify-between">
 					<Label for="password">Password</Label>
-					<a href="/forgot-password" class="text-muted-foreground text-xs hover:underline"
+					<a href="/forgot-password" class="text-xs text-muted-foreground hover:underline"
 						>Forgot password?</a
 					>
 				</div>

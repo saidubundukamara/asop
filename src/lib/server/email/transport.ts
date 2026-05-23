@@ -16,9 +16,7 @@ const devTransport: EmailTransport = async (payload) => {
 // Resend wiring is stubbed until sender domain DNS lands (PRD open Q#3).
 // When ready: import { Resend } from 'resend', call client.emails.send({...}).
 const resendTransport: EmailTransport = async () => {
-	throw new Error(
-		'Resend transport is not wired yet. Set EMAIL_TRANSPORT=dev or wire chunk 8.'
-	);
+	throw new Error('Resend transport is not wired yet. Set EMAIL_TRANSPORT=dev or wire chunk 8.');
 };
 
 export function pickTransport(): EmailTransport {

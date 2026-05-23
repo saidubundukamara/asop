@@ -46,7 +46,7 @@
 					required
 					minlength={10}
 				/>
-				<p class="text-muted-foreground text-xs">
+				<p class="text-xs text-muted-foreground">
 					Minimum 10 characters, at least one number, not a commonly-used password.
 				</p>
 			</div>
