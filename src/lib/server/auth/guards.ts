@@ -1,5 +1,6 @@
 import { error, redirect } from '@sveltejs/kit';
 import type { RequestEvent } from '@sveltejs/kit';
+import { can, type Action, type RbacUser, type Resource } from '$lib/server/rbac';
 
 type Role = 'admin' | 'manager' | 'staff';
 
@@ -33,5 +34,18 @@ export function requireRole(
 ): AuthenticatedLocals['user'] {
 	if (!user) throw error(401, 'Not signed in');
 	if (!roles.includes(user.role as Role)) throw error(403, 'Forbidden');
+	return user;
+}
+
+// Matrix-aware variant of requireRole. Delegates to can() in rbac.ts so the
+// RBAC matrix stays the single source of truth — call sites pass the same
+// (action, resource) pair they'd test in the UI to hide an affordance.
+export function requireCan(
+	user: AuthenticatedLocals['user'] | null,
+	action: Action,
+	resource: Resource
+): AuthenticatedLocals['user'] {
+	if (!user) throw error(401, 'Not signed in');
+	if (!can(user as RbacUser, action, resource)) throw error(403, 'Forbidden');
 	return user;
 }
