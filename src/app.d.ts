@@ -14,7 +14,7 @@ declare global {
 			session: SessionData | null;
 		}
 		interface PageData {
-			user: SessionUser | null;
+			user?: SessionUser | null;
 		}
 		// interface PageState {}
 		// interface Platform {}
