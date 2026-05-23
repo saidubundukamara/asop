@@ -4,6 +4,7 @@
 	import BellIcon from '@lucide/svelte/icons/bell';
 	import LogOutIcon from '@lucide/svelte/icons/log-out';
 	import UserIcon from '@lucide/svelte/icons/user';
+	import UsersIcon from '@lucide/svelte/icons/users';
 	import { Avatar, AvatarFallback } from '$lib/components/ui/avatar';
 	import { Button } from '$lib/components/ui/button';
 	import * as DropdownMenu from '$lib/components/ui/dropdown-menu';
@@ -16,6 +17,7 @@
 			.map((part) => part[0]?.toUpperCase() ?? '')
 			.join('')
 	);
+	const canManageStaff = $derived(user?.role === 'admin' || user?.role === 'manager');
 </script>
 
 <header
@@ -64,6 +66,16 @@
 					</a>
 				{/snippet}
 			</DropdownMenu.Item>
+			{#if canManageStaff}
+				<DropdownMenu.Item>
+					{#snippet child({ props })}
+						<a {...props} href="/staff" class="flex items-center gap-2">
+							<UsersIcon class="size-4" />
+							Staff
+						</a>
+					{/snippet}
+				</DropdownMenu.Item>
+			{/if}
 			<DropdownMenu.Separator />
 			<DropdownMenu.Item>
 				{#snippet child({ props })}
