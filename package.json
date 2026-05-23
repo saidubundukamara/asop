@@ -67,8 +67,14 @@
 	},
 	"dependencies": {
 		"@prisma/client": "^6.19.3",
+		"@tiptap/core": "3.23.6",
+		"@tiptap/extension-link": "3.23.6",
+		"@tiptap/extension-placeholder": "3.23.6",
+		"@tiptap/pm": "3.23.6",
+		"@tiptap/starter-kit": "3.23.6",
 		"better-auth": "^1.6.11",
 		"cloudinary": "^2.10.0",
+		"isomorphic-dompurify": "3.14.0",
 		"zod": "^4.4.3"
 	}
 }
