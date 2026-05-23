@@ -68,6 +68,7 @@
 	"dependencies": {
 		"@prisma/client": "^6.19.3",
 		"better-auth": "^1.6.11",
+		"cloudinary": "^2.10.0",
 		"zod": "^4.4.3"
 	}
 }
