@@ -1,0 +1,25 @@
+{
+	"name": "ADSAT Staff Operations Platform",
+	"short_name": "ADSAT Ops",
+	"description": "Internal operations platform for ADSAT Development Services — task assignment, report submission, staff directory.",
+	"start_url": "/dashboard",
+	"scope": "/",
+	"display": "standalone",
+	"orientation": "portrait",
+	"background_color": "#ffffff",
+	"theme_color": "#0a0a0a",
+	"icons": [
+		{
+			"src": "/placeholder-logo.svg",
+			"sizes": "any",
+			"type": "image/svg+xml",
+			"purpose": "any"
+		},
+		{
+			"src": "/placeholder-logo.svg",
+			"sizes": "any",
+			"type": "image/svg+xml",
+			"purpose": "maskable"
+		}
+	]
+}
