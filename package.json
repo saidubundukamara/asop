@@ -13,6 +13,7 @@
 		"db:migrate": "prisma migrate dev",
 		"db:push": "prisma db push",
 		"db:studio": "prisma studio",
+		"auth:generate": "better-auth generate --config src/lib/server/auth-cli.ts -y --output /tmp/auth-schema.prisma && echo 'Wrote /tmp/auth-schema.prisma — merge changes into prisma/schema.prisma by hand'",
 		"check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
 		"check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
 		"lint": "prettier --check . && eslint .",
