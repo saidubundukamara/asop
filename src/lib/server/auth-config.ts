@@ -4,6 +4,7 @@ import { haveIBeenPwned } from 'better-auth/plugins/haveibeenpwned';
 import type { BetterAuthOptions } from 'better-auth';
 import { prisma } from './db';
 import { checkPasswordPolicy, passwordPolicyMessage } from './auth/password-policy';
+import { sendInviteEmail, sendPasswordResetEmail } from './email';
 
 // Shared Better Auth options. SvelteKit-coupled plugins (sveltekitCookies)
 // live in auth.ts so they don't poison this module — @better-auth/cli loads
@@ -30,14 +31,15 @@ export const baseAuthConfig = {
 		autoSignIn: true,
 		requireEmailVerification: false,
 		sendResetPassword: async ({ user, url }) => {
-			// Real transport wired in chunk 8. Until then, dev visibility:
-			console.log('[email:reset-password]', { to: user.email, url });
+			await sendPasswordResetEmail(user.email, url);
 		}
 	},
 
 	emailVerification: {
 		sendVerificationEmail: async ({ user, url }) => {
-			console.log('[email:verify-email]', { to: user.email, url });
+			// Same template as the manual admin-invite flow — both land the
+			// invitee on /accept-invite/[token] to set their first password.
+			await sendInviteEmail(user.email, url);
 		}
 	},
 
