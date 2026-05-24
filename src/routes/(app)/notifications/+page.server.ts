@@ -8,7 +8,7 @@ const PAGE_SIZE = 25;
 
 const pageSchema = z
 	.string()
-	.optional()
+	.nullish()
 	.transform((v) => Math.max(1, Number(v) || 1));
 
 export const load: PageServerLoad = async (event) => {
