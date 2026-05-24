@@ -54,6 +54,12 @@ model User {
   taskComments         TaskComment[]
   taskTemplatesCreated TaskTemplate[]    @relation("TaskTemplateCreator")
 
+  // Phase 4 — reports
+  reportsAuthored          Report[]         @relation("ReportAuthor")
+  reportsReviewing         Report[]         @relation("ReportReviewer")
+  reportTemplatesCreated   ReportTemplate[] @relation("ReportTemplateCreator")
+  reportComments           ReportComment[]
+
   @@unique([email])
   @@index([departmentId])
   @@map("user")
@@ -125,9 +131,10 @@ model Department {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  users         User[]
-  tasks         Task[]
-  taskTemplates TaskTemplate[]
+  users           User[]
+  tasks           Task[]
+  taskTemplates   TaskTemplate[]
+  reportTemplates ReportTemplate[]
 }
 
 // Append-only record of sensitive actions (PRD § 11.1, FR-AUDIT-1). Phase 2
@@ -223,6 +230,7 @@ model Task {
 
   statusEvents TaskStatusEvent[]
   comments     TaskComment[]
+  reports      Report[]
 
   // PRD § 11.3 indexes
   @@index([assigneeId, status])
@@ -263,4 +271,147 @@ model TaskComment {
 
   @@index([taskId, createdAt(sort: Desc)])
   @@map("task_comment")
+}
+
+// --- Phase 4 — Reports (FR-REP-1..9) ---
+
+enum ReportStatus {
+  draft
+  submitted
+  under_review
+  approved
+  needs_revision
+}
+
+enum ReportFieldType {
+  short_text
+  long_text
+  number
+  date
+  datetime
+  dropdown
+  multi_select
+  checkbox
+  file
+  geolocation
+}
+
+// Admin-defined form template. Versioning: if a template that already has
+// non-draft Report rows is edited, a new version row is created and the old
+// one is deactivated (isActive = false). Reports keep their original templateId
+// so they always render against the field definitions they were created with.
+model ReportTemplate {
+  id           String   @id @default(cuid())
+  name         String
+  description  String?
+  departmentId String?
+  // Who reviews reports submitted against this template: "manager" | "admin"
+  reviewerRole String   @default("manager")
+  version      Int      @default(1)
+  isActive     Boolean  @default(true)
+  createdById  String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  department Department?    @relation(fields: [departmentId], references: [id], onDelete: SetNull)
+  createdBy  User?          @relation("ReportTemplateCreator", fields: [createdById], references: [id], onDelete: SetNull)
+  fields     ReportField[]
+  reports    Report[]
+
+  @@index([isActive, name])
+  @@index([departmentId])
+  @@map("report_template")
+}
+
+// A single field within a ReportTemplate. Cascade-deleted with its template.
+// configJson holds type-specific config: { options: string[] } for dropdown/
+// multi_select; { min, max } for number/short_text/long_text; { maxFiles,
+// maxSizeBytes } for file; empty for others.
+model ReportField {
+  id           String          @id @default(cuid())
+  templateId   String
+  label        String
+  fieldType    ReportFieldType
+  helpText     String?
+  isRequired   Boolean         @default(false)
+  displayOrder Int             @default(0)
+  configJson   Json?
+  defaultValue String?
+  createdAt    DateTime        @default(now())
+
+  template    ReportTemplate   @relation(fields: [templateId], references: [id], onDelete: Cascade)
+  fieldValues ReportFieldValue[]
+
+  @@index([templateId, displayOrder])
+  @@map("report_field")
+}
+
+// A single staff report submission. templateId pins the exact template version
+// used; templateVersion is denormalized for display ("submitted against v2").
+model Report {
+  id              String       @id @default(cuid())
+  templateId      String
+  templateVersion Int
+  authorId        String
+  // Set on first review action (null = not yet picked up by a reviewer).
+  reviewerId      String?
+  status          ReportStatus @default(draft)
+  // FR-REP-9: optional cross-link to a related task.
+  taskId          String?
+  submittedAt     DateTime?
+  reviewedAt      DateTime?
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+
+  template    ReportTemplate    @relation(fields: [templateId], references: [id], onDelete: Restrict)
+  author      User              @relation("ReportAuthor", fields: [authorId], references: [id], onDelete: Restrict)
+  reviewer    User?             @relation("ReportReviewer", fields: [reviewerId], references: [id], onDelete: SetNull)
+  task        Task?             @relation(fields: [taskId], references: [id], onDelete: SetNull)
+  fieldValues ReportFieldValue[]
+  comments    ReportComment[]
+
+  // PRD § 11.3 indexes
+  @@index([authorId, status])
+  @@index([reviewerId, status])
+  @@index([templateId, submittedAt(sort: Desc)])
+  @@index([taskId])
+  @@map("report")
+}
+
+// One value per (report, field) pair. The column used depends on fieldType:
+// valueText for short_text/long_text/dropdown, valueNumber for number,
+// valueDate for date/datetime, valueJson for multi_select/geolocation/file.
+model ReportFieldValue {
+  id          String   @id @default(cuid())
+  reportId    String
+  fieldId     String
+  valueText   String?
+  valueNumber Decimal?
+  valueDate   DateTime?
+  valueJson   Json?
+
+  report Report      @relation(fields: [reportId], references: [id], onDelete: Cascade)
+  field  ReportField @relation(fields: [fieldId], references: [id], onDelete: Cascade)
+
+  @@unique([reportId, fieldId])
+  @@map("report_field_value")
+}
+
+// Comments on a report — same lifecycle rules as TaskComment (FR-REP-8):
+// author can edit within 15 minutes; deletion is admin-only and logged.
+model ReportComment {
+  id               String    @id @default(cuid())
+  reportId         String
+  authorId         String?
+  body             String
+  mentionedUserIds String[]
+  createdAt        DateTime  @default(now())
+  editedAt         DateTime?
+  deletedAt        DateTime?
+
+  report Report @relation(fields: [reportId], references: [id], onDelete: Cascade)
+  author User?  @relation(fields: [authorId], references: [id], onDelete: SetNull)
+
+  @@index([reportId, createdAt(sort: Desc)])
+  @@map("report_comment")
 }
