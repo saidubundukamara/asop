@@ -15,6 +15,36 @@
 	const departmentLabel = $derived(profile.department?.name ?? '—');
 
 	let savingProfile = $state(false);
+
+	// Notification preferences helpers
+	const channels = ['in_app', 'email', 'push'] as const;
+	const channelLabels: Record<string, string> = { in_app: 'In-app', email: 'Email', push: 'Push' };
+	const categories = ['task', 'report', 'mention'] as const;
+	const categoryLabels: Record<string, string> = {
+		task: 'Tasks',
+		report: 'Reports',
+		mention: 'Mentions'
+	};
+
+	function getPref(channel: string, category: string) {
+		return data.notificationPrefs.find(
+			(p) => p.channel === channel && p.eventCategory === category
+		);
+	}
+
+	function isPrefEnabled(channel: string, category: string): boolean {
+		const pref = getPref(channel, category);
+		return pref ? pref.isEnabled : true; // absent = enabled (opt-out model)
+	}
+
+	async function togglePref(channel: string, category: string, isEnabled: boolean) {
+		const fd = new FormData();
+		fd.set('channel', channel);
+		fd.set('eventCategory', category);
+		fd.set('isEnabled', String(isEnabled));
+		const res = await fetch('?/updateNotificationPref', { method: 'POST', body: fd });
+		if (res.ok) await invalidateAll();
+	}
 </script>
 
 <svelte:head><title>Profile · ADSAT Ops</title></svelte:head>
@@ -64,6 +94,53 @@
 				<span class="text-muted-foreground">Department</span>
 				<span class="font-medium">{departmentLabel}</span>
 			</div>
+		</Card.Content>
+	</Card.Root>
+
+	<!-- Notification preferences -->
+	<Card.Root>
+		<Card.Header>
+			<Card.Title>Notification preferences</Card.Title>
+			<Card.Description
+				>Choose which notifications you receive and on which channels.</Card.Description
+			>
+		</Card.Header>
+		<Card.Content class="space-y-4">
+			<div class="overflow-x-auto">
+				<table class="w-full text-sm">
+					<thead>
+						<tr>
+							<th class="pb-2 text-left font-medium text-muted-foreground">Category</th>
+							{#each channels as ch (ch)}
+								<th class="pb-2 text-center font-medium text-muted-foreground"
+									>{channelLabels[ch]}</th
+								>
+							{/each}
+						</tr>
+					</thead>
+					<tbody class="divide-y">
+						{#each categories as cat (cat)}
+							<tr>
+								<td class="py-2 font-medium">{categoryLabels[cat]}</td>
+								{#each channels as ch (ch)}
+									<td class="py-2 text-center">
+										<input
+											type="checkbox"
+											class="size-4 cursor-pointer rounded accent-foreground"
+											checked={isPrefEnabled(ch, cat)}
+											onchange={(e) => togglePref(ch, cat, (e.target as HTMLInputElement).checked)}
+										/>
+									</td>
+								{/each}
+							</tr>
+						{/each}
+					</tbody>
+				</table>
+			</div>
+			<p class="text-xs text-muted-foreground">
+				Push notifications require browser opt-in. You'll be prompted when a task is assigned to
+				you.
+			</p>
 		</Card.Content>
 	</Card.Root>
 

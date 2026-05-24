@@ -1,10 +1,18 @@
 <script lang="ts">
+	import { onMount } from 'svelte';
+	import { building } from '$app/environment';
 	import { Toaster } from '$lib/components/ui/sonner';
 	import TopBar from '$lib/components/shell/TopBar.svelte';
 	import TabBar from '$lib/components/shell/TabBar.svelte';
 	import Sidebar from '$lib/components/shell/Sidebar.svelte';
+	import PushOptIn from '$lib/components/notifications/PushOptIn.svelte';
 
 	let { children } = $props();
+
+	onMount(() => {
+		if (building || !('serviceWorker' in navigator)) return;
+		navigator.serviceWorker.register('/service-worker.js', { type: 'module' }).catch(() => {});
+	});
 </script>
 
 <div class="min-h-dvh bg-background text-foreground">
@@ -23,3 +31,4 @@
 	<TabBar />
 </div>
 <Toaster />
+<PushOptIn />
