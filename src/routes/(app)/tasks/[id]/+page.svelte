@@ -17,7 +17,7 @@
 	import StatusActionButtons from '$lib/components/tasks/StatusActionButtons.svelte';
 	import CommentThread from '$lib/components/tasks/CommentThread.svelte';
 	import CommentForm from '$lib/components/tasks/CommentForm.svelte';
-	import AttachmentsPlaceholder from '$lib/components/tasks/AttachmentsPlaceholder.svelte';
+	import FileDropzone from '$lib/components/forms/FileDropzone.svelte';
 	import EditTaskSheet from '$lib/components/tasks/EditTaskSheet.svelte';
 	import ReassignSheet from '$lib/components/tasks/ReassignSheet.svelte';
 	import DeleteTaskDialog from '$lib/components/tasks/DeleteTaskDialog.svelte';
@@ -186,7 +186,14 @@
 		<Card>
 			<CardHeader><CardTitle class="text-base">Attachments</CardTitle></CardHeader>
 			<CardContent>
-				<AttachmentsPlaceholder />
+				<FileDropzone
+					ownerType="task"
+					ownerId={data.task.id}
+					folder="task-attachments"
+					existingAttachments={data.attachments}
+					canDelete={data.canDeleteAttachment}
+					readonly={!!data.task.deletedAt || data.task.status === 'completed'}
+				/>
 			</CardContent>
 		</Card>
 

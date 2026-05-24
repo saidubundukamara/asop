@@ -8,6 +8,7 @@
 	import { Input } from '$lib/components/ui/input';
 	import { Label } from '$lib/components/ui/label';
 	import { Button } from '$lib/components/ui/button';
+	import FileDropzone from '$lib/components/forms/FileDropzone.svelte';
 
 	type Template = {
 		id: string;
@@ -43,6 +44,7 @@
 	let priority = $state<'low' | 'medium' | 'high'>('medium');
 	let departmentId = $state('');
 	let dueDate = $state('');
+	let dropzoneRef: FileDropzone | undefined = $state();
 
 	// Re-seed every editable field when the template identity changes — the
 	// user picked a different template from the dropdown and the parent
@@ -123,11 +125,14 @@
 					submitting = false;
 					if (result.type === 'success') {
 						const data = result.data as { data?: { id?: string } } | undefined;
+						const taskId = data?.data?.id;
 						toast.success('Task created');
 						close();
-						if (data?.data?.id) {
+						if (taskId) {
+							// Flush any queued attachments before navigating so they land on the task.
+							if (dropzoneRef) void dropzoneRef.flush(taskId).catch(() => {});
 							// eslint-disable-next-line svelte/no-navigation-without-resolve
-							void goto(`/tasks/${data.data.id}`);
+							void goto(`/tasks/${taskId}`);
 						}
 					} else if (result.type === 'failure') {
 						const fail = result.data as { issues?: Record<string, string[]> } | undefined;
@@ -237,6 +242,16 @@
 						<option value={d.id}>{d.name}</option>
 					{/each}
 				</select>
+			</div>
+
+			<div class="grid gap-1.5">
+				<span class="text-sm font-medium">Attachments</span>
+				<FileDropzone
+					bind:this={dropzoneRef}
+					ownerType="task"
+					ownerId={null}
+					folder="task-attachments"
+				/>
 			</div>
 
 			<Sheet.Footer>

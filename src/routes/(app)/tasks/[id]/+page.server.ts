@@ -121,8 +121,23 @@ export const load: PageServerLoad = async (event) => {
 
 	const now = new Date();
 
+	const attachments = await prisma.attachment.findMany({
+		where: { ownerType: 'task', ownerId: task.id, deletedAt: null },
+		orderBy: { createdAt: 'asc' },
+		select: {
+			id: true,
+			originalFilename: true,
+			mimeType: true,
+			sizeBytes: true,
+			secureUrl: true,
+			cloudinaryPublicId: true,
+			uploadedById: true
+		}
+	});
+
 	return {
 		task,
+		attachments,
 		assigneeOptions,
 		departments,
 		canEdit: can(actor, 'task.update_fields', resource),
@@ -132,6 +147,12 @@ export const load: PageServerLoad = async (event) => {
 		canRestore: can(actor, 'task.restore', resource) && !!task.deletedAt,
 		canComment: can(actor, 'task.comment.create', { type: 'task_list' }) && !task.deletedAt,
 		canDeleteAnyComment: canDeleteComment(actor),
+		canDeleteAttachment: can(actor, 'attachment.delete', {
+			type: 'attachment',
+			uploadedById: actor.id,
+			ownerType: 'task',
+			ownerDepartmentId: task.departmentId
+		}),
 		allowedTransitions: allowedTransitions(
 			{ role: actor.role, isAssignee: task.assigneeId === actor.id },
 			task.status
