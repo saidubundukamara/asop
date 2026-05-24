@@ -55,10 +55,10 @@ model User {
   taskTemplatesCreated TaskTemplate[]    @relation("TaskTemplateCreator")
 
   // Phase 4 — reports
-  reportsAuthored          Report[]         @relation("ReportAuthor")
-  reportsReviewing         Report[]         @relation("ReportReviewer")
-  reportTemplatesCreated   ReportTemplate[] @relation("ReportTemplateCreator")
-  reportComments           ReportComment[]
+  reportsAuthored        Report[]         @relation("ReportAuthor")
+  reportsReviewing       Report[]         @relation("ReportReviewer")
+  reportTemplatesCreated ReportTemplate[] @relation("ReportTemplateCreator")
+  reportComments         ReportComment[]
 
   // Phase 5 — notifications
   notifications     Notification[]           @relation("UserNotifications")
@@ -68,8 +68,13 @@ model User {
   // Phase 6 — attachments
   attachments Attachment[] @relation("UserAttachments")
 
+  // Phase 7 — FTS. Generated tsvector maintained by Postgres (see
+  // 20260524124205_phase7_search). Read via $queryRaw in db/search.ts.
+  search_tsv Unsupported("tsvector")?
+
   @@unique([email])
   @@index([departmentId])
+  @@index([search_tsv], type: Gin)
   @@map("user")
 }
 
@@ -240,12 +245,16 @@ model Task {
   comments     TaskComment[]
   reports      Report[]
 
+  // Phase 7 — FTS.
+  search_tsv Unsupported("tsvector")?
+
   // PRD § 11.3 indexes
   @@index([assigneeId, status])
   @@index([dueDate])
   @@index([assignerId])
   @@index([departmentId, status])
   @@index([deletedAt])
+  @@index([search_tsv], type: Gin)
   @@map("task")
 }
 
@@ -277,7 +286,11 @@ model TaskComment {
   editedAt         DateTime?
   deletedAt        DateTime?
 
+  // Phase 7 — FTS.
+  search_tsv Unsupported("tsvector")?
+
   @@index([taskId, createdAt(sort: Desc)])
+  @@index([search_tsv], type: Gin)
   @@map("task_comment")
 }
 
@@ -321,8 +334,8 @@ model ReportTemplate {
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
-  department Department?    @relation(fields: [departmentId], references: [id], onDelete: SetNull)
-  createdBy  User?          @relation("ReportTemplateCreator", fields: [createdById], references: [id], onDelete: SetNull)
+  department Department?   @relation(fields: [departmentId], references: [id], onDelete: SetNull)
+  createdBy  User?         @relation("ReportTemplateCreator", fields: [createdById], references: [id], onDelete: SetNull)
   fields     ReportField[]
   reports    Report[]
 
@@ -347,7 +360,7 @@ model ReportField {
   defaultValue String?
   createdAt    DateTime        @default(now())
 
-  template    ReportTemplate   @relation(fields: [templateId], references: [id], onDelete: Cascade)
+  template    ReportTemplate     @relation(fields: [templateId], references: [id], onDelete: Cascade)
   fieldValues ReportFieldValue[]
 
   @@index([templateId, displayOrder])
@@ -371,10 +384,10 @@ model Report {
   createdAt       DateTime     @default(now())
   updatedAt       DateTime     @updatedAt
 
-  template    ReportTemplate    @relation(fields: [templateId], references: [id], onDelete: Restrict)
-  author      User              @relation("ReportAuthor", fields: [authorId], references: [id], onDelete: Restrict)
-  reviewer    User?             @relation("ReportReviewer", fields: [reviewerId], references: [id], onDelete: SetNull)
-  task        Task?             @relation(fields: [taskId], references: [id], onDelete: SetNull)
+  template    ReportTemplate     @relation(fields: [templateId], references: [id], onDelete: Restrict)
+  author      User               @relation("ReportAuthor", fields: [authorId], references: [id], onDelete: Restrict)
+  reviewer    User?              @relation("ReportReviewer", fields: [reviewerId], references: [id], onDelete: SetNull)
+  task        Task?              @relation(fields: [taskId], references: [id], onDelete: SetNull)
   fieldValues ReportFieldValue[]
   comments    ReportComment[]
 
@@ -390,7 +403,7 @@ model Report {
 // valueText for short_text/long_text/dropdown, valueNumber for number,
 // valueDate for date/datetime, valueJson for multi_select/geolocation/file.
 model ReportFieldValue {
-  id          String   @id @default(cuid())
+  id          String    @id @default(cuid())
   reportId    String
   fieldId     String
   valueText   String?
@@ -401,7 +414,11 @@ model ReportFieldValue {
   report Report      @relation(fields: [reportId], references: [id], onDelete: Cascade)
   field  ReportField @relation(fields: [fieldId], references: [id], onDelete: Cascade)
 
+  // Phase 7 — FTS (valueText only; structured columns aren't searchable).
+  search_tsv Unsupported("tsvector")?
+
   @@unique([reportId, fieldId])
+  @@index([search_tsv], type: Gin)
   @@map("report_field_value")
 }
 
@@ -420,7 +437,11 @@ model ReportComment {
   report Report @relation(fields: [reportId], references: [id], onDelete: Cascade)
   author User?  @relation(fields: [authorId], references: [id], onDelete: SetNull)
 
+  // Phase 7 — FTS.
+  search_tsv Unsupported("tsvector")?
+
   @@index([reportId, createdAt(sort: Desc)])
+  @@index([search_tsv], type: Gin)
   @@map("report_comment")
 }
 
@@ -450,11 +471,11 @@ model NotificationPreference {
   id              String    @id @default(cuid())
   userId          String
   user            User      @relation("UserNotifPrefs", fields: [userId], references: [id], onDelete: Cascade)
-  channel         String    // "in_app" | "email" | "push"
-  eventCategory   String    // "task" | "report" | "mention"
+  channel         String // "in_app" | "email" | "push"
+  eventCategory   String // "task" | "report" | "mention"
   isEnabled       Boolean   @default(true)
-  quietHoursStart Int?      // 0-23 inclusive, local time in timeZone
-  quietHoursEnd   Int?      // 0-23 inclusive; end < start = crosses midnight
+  quietHoursStart Int? // 0-23 inclusive, local time in timeZone
+  quietHoursEnd   Int? // 0-23 inclusive; end < start = crosses midnight
   timeZone        String    @default("UTC")
   pauseUntil      DateTime?
 
@@ -486,7 +507,7 @@ model PushSubscription {
 // The corresponding Cloudinary asset is destroyed best-effort after soft-delete.
 model Attachment {
   id                 String    @id @default(cuid())
-  ownerType          String    // "task" | "task_comment" | "report" | "report_comment"
+  ownerType          String // "task" | "task_comment" | "report" | "report_comment"
   ownerId            String
   cloudinaryPublicId String
   secureUrl          String

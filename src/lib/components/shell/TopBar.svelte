@@ -7,6 +7,10 @@
 	import { Avatar, AvatarFallback } from '$lib/components/ui/avatar';
 	import * as DropdownMenu from '$lib/components/ui/dropdown-menu';
 	import NotificationBell from '$lib/components/notifications/NotificationBell.svelte';
+	import SearchTrigger from './SearchTrigger.svelte';
+	import SearchCommand from './SearchCommand.svelte';
+
+	let searchOpen = $state(false);
 
 	const user = $derived(page.data.user);
 	const initials = $derived(
@@ -33,6 +37,7 @@
 
 	<div class="flex-1"></div>
 
+	<SearchTrigger onOpen={() => (searchOpen = true)} />
 	<NotificationBell />
 
 	<DropdownMenu.Root>
@@ -87,3 +92,5 @@
 		</DropdownMenu.Content>
 	</DropdownMenu.Root>
 </header>
+
+<SearchCommand bind:open={searchOpen} />
