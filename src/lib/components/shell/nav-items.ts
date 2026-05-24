@@ -2,7 +2,7 @@ import type { Component } from 'svelte';
 import HomeIcon from '@lucide/svelte/icons/house';
 import ListChecksIcon from '@lucide/svelte/icons/list-checks';
 import FileTextIcon from '@lucide/svelte/icons/file-text';
-import InboxIcon from '@lucide/svelte/icons/inbox';
+import BellIcon from '@lucide/svelte/icons/bell';
 import UserIcon from '@lucide/svelte/icons/user';
 import UsersIcon from '@lucide/svelte/icons/users';
 import FileCogIcon from '@lucide/svelte/icons/file-cog';
@@ -23,7 +23,7 @@ export const primaryNav: NavItem[] = [
 	{ label: 'Home', href: '/dashboard', icon: HomeIcon },
 	{ label: 'Tasks', href: '/tasks', icon: ListChecksIcon },
 	{ label: 'Reports', href: '/reports', icon: FileTextIcon },
-	{ label: 'Inbox', href: '/inbox', icon: InboxIcon },
+	{ label: 'Inbox', href: '/notifications', icon: BellIcon },
 	{ label: 'Me', href: '/profile', icon: UserIcon }
 ];
 

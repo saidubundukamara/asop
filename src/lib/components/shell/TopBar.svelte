@@ -1,13 +1,12 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
 	import { page } from '$app/state';
-	import BellIcon from '@lucide/svelte/icons/bell';
 	import LogOutIcon from '@lucide/svelte/icons/log-out';
 	import UserIcon from '@lucide/svelte/icons/user';
 	import UsersIcon from '@lucide/svelte/icons/users';
 	import { Avatar, AvatarFallback } from '$lib/components/ui/avatar';
-	import { Button } from '$lib/components/ui/button';
 	import * as DropdownMenu from '$lib/components/ui/dropdown-menu';
+	import NotificationBell from '$lib/components/notifications/NotificationBell.svelte';
 
 	const user = $derived(page.data.user);
 	const initials = $derived(
@@ -34,9 +33,7 @@
 
 	<div class="flex-1"></div>
 
-	<Button variant="ghost" size="icon" aria-label="Notifications">
-		<BellIcon />
-	</Button>
+	<NotificationBell />
 
 	<DropdownMenu.Root>
 		<DropdownMenu.Trigger>

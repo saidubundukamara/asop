@@ -30,3 +30,33 @@ sw.addEventListener('activate', (event) => {
 sw.addEventListener('fetch', () => {
 	/* no-op */
 });
+
+// Phase 5 — Web Push delivery.
+sw.addEventListener('push', (event: PushEvent) => {
+	const data = event.data?.json() as
+		| { title?: string; body?: string; deepLink?: string }
+		| undefined;
+	if (!data?.title) return;
+	event.waitUntil(
+		sw.registration.showNotification(data.title, {
+			body: data.body,
+			icon: '/favicon.png',
+			badge: '/favicon.png',
+			data: { deepLink: data.deepLink ?? '/' }
+		})
+	);
+});
+
+sw.addEventListener('notificationclick', (event: NotificationEvent) => {
+	event.notification.close();
+	const deepLink: string = (event.notification.data as { deepLink?: string })?.deepLink ?? '/';
+	event.waitUntil(
+		sw.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clients) => {
+			const existing = clients.find((c) => 'focus' in c);
+			if (existing) {
+				return (existing as WindowClient).focus().then((c) => c.navigate(deepLink));
+			}
+			return sw.clients.openWindow(deepLink);
+		})
+	);
+});
