@@ -65,6 +65,9 @@ model User {
   notificationPrefs NotificationPreference[] @relation("UserNotifPrefs")
   pushSubscriptions PushSubscription[]       @relation("UserPushSubs")
 
+  // Phase 6 — attachments
+  attachments Attachment[] @relation("UserAttachments")
+
   @@unique([email])
   @@index([departmentId])
   @@map("user")
@@ -473,4 +476,29 @@ model PushSubscription {
 
   @@index([userId])
   @@map("push_subscription")
+}
+
+// --- Phase 6 — Attachments (FR-FILE-1..3) ---
+//
+// Polymorphic: one row per file per parent entity. ownerType values:
+//   "task" | "task_comment" | "report" | "report_comment"
+// Soft-deleted (deletedAt) so the audit trail is preserved; the UI hides deleted rows immediately.
+// The corresponding Cloudinary asset is destroyed best-effort after soft-delete.
+model Attachment {
+  id                 String    @id @default(cuid())
+  ownerType          String    // "task" | "task_comment" | "report" | "report_comment"
+  ownerId            String
+  cloudinaryPublicId String
+  secureUrl          String
+  mimeType           String
+  sizeBytes          Int
+  originalFilename   String
+  uploadedById       String
+  uploadedBy         User      @relation("UserAttachments", fields: [uploadedById], references: [id])
+  deletedAt          DateTime?
+  createdAt          DateTime  @default(now())
+
+  @@index([ownerType, ownerId])
+  @@index([uploadedById])
+  @@map("attachment")
 }
