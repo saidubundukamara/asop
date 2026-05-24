@@ -13,10 +13,19 @@ const devTransport: EmailTransport = async (payload) => {
 	console.log('\n[email:dev]', JSON.stringify(payload, null, 2), '\n');
 };
 
-// Resend wiring is stubbed until sender domain DNS lands (PRD open Q#3).
-// When ready: import { Resend } from 'resend', call client.emails.send({...}).
-const resendTransport: EmailTransport = async () => {
-	throw new Error('Resend transport is not wired yet. Set EMAIL_TRANSPORT=dev or wire chunk 8.');
+import { Resend } from 'resend';
+
+const FROM = process.env.EMAIL_FROM ?? 'ADSAT Ops <noreply@example.com>';
+
+const resendTransport: EmailTransport = async (payload) => {
+	const client = new Resend(process.env.RESEND_API_KEY);
+	await client.emails.send({
+		from: FROM,
+		to: payload.to,
+		subject: payload.subject,
+		html: payload.html,
+		text: payload.text
+	});
 };
 
 export function pickTransport(): EmailTransport {

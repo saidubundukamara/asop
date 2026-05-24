@@ -41,7 +41,11 @@ export type AuditAction =
 	| 'report.comment_deleted'
 	| 'report_template.created'
 	| 'report_template.updated'
-	| 'report_template.archived';
+	| 'report_template.archived'
+	// Phase 5 — notification preferences and push subscriptions.
+	| 'notification.preference_updated'
+	| 'push_subscription.registered'
+	| 'push_subscription.removed';
 
 export type AuditInput = {
 	actorId: string;

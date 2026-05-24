@@ -70,7 +70,11 @@ export type Action =
 	| 'report_template.read'
 	| 'report_template.create'
 	| 'report_template.update'
-	| 'report_template.archive';
+	| 'report_template.archive'
+	// Phase 5 — notifications. All roles, own data only (enforced in load/action).
+	| 'notification.list'
+	| 'notification.mark_read'
+	| 'notification.preference_update';
 
 export type Resource =
 	| { type: 'user'; id: string; departmentId: string | null | undefined; isSelf: boolean }
@@ -96,7 +100,10 @@ export type Resource =
 	  }
 	| { type: 'report_list' }
 	| { type: 'report_comment'; authorId: string | null }
-	| { type: 'report_template' };
+	| { type: 'report_template' }
+	// Phase 5 — notifications.
+	| { type: 'notification'; recipientId: string }
+	| { type: 'notification_list' };
 
 export type DirectoryScope = 'all' | 'team' | 'self';
 
@@ -312,6 +319,21 @@ export function can(user: RbacUser, action: Action, resource: Resource): boolean
 		case 'report_template.update':
 		case 'report_template.archive':
 			return role === 'admin';
+
+		// --- Notifications (FR-NOTIF-1..4) ---
+
+		case 'notification.list':
+			// Own notifications only — enforced in the load function via recipientId filter.
+			return true;
+
+		case 'notification.mark_read': {
+			if (resource.type !== 'notification') return false;
+			return resource.recipientId === user.id;
+		}
+
+		case 'notification.preference_update':
+			// Own preferences only — load/action enforce userId = actor.id.
+			return true;
 
 		default: {
 			const _exhaustive: never = action;
