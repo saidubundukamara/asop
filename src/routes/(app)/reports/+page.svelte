@@ -17,8 +17,9 @@
 		{ value: 'approved', label: 'Approved' }
 	];
 
-	const tabLabel =
-		data.scope === 'self' ? 'My Reports' : data.scope === 'team' ? 'Team Reports' : 'All Reports';
+	const tabLabel = $derived(
+		data.scope === 'self' ? 'My Reports' : data.scope === 'team' ? 'Team Reports' : 'All Reports'
+	);
 
 	function setFilter(key: string, value: string) {
 		const url = new URL(page.url);
