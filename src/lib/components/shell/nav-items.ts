@@ -40,8 +40,13 @@ const taskTemplatesNav: NavItem = {
 	href: '/templates/tasks',
 	icon: FileCogIcon
 };
+const reportTemplatesNav: NavItem = {
+	label: 'Report templates',
+	href: '/templates/reports',
+	icon: FileCogIcon
+};
 
-export const adminNav: NavItem[] = [staffNav, taskTemplatesNav];
+export const adminNav: NavItem[] = [staffNav, taskTemplatesNav, reportTemplatesNav];
 export const managerNav: NavItem[] = [staffNav];
 
 export function secondaryNavForRole(role: Role | string | undefined): NavItem[] {
