@@ -60,6 +60,11 @@ model User {
   reportTemplatesCreated   ReportTemplate[] @relation("ReportTemplateCreator")
   reportComments           ReportComment[]
 
+  // Phase 5 — notifications
+  notifications     Notification[]           @relation("UserNotifications")
+  notificationPrefs NotificationPreference[] @relation("UserNotifPrefs")
+  pushSubscriptions PushSubscription[]       @relation("UserPushSubs")
+
   @@unique([email])
   @@index([departmentId])
   @@map("user")
@@ -414,4 +419,58 @@ model ReportComment {
 
   @@index([reportId, createdAt(sort: Desc)])
   @@map("report_comment")
+}
+
+// --- Phase 5 — Notifications (FR-NOTIF-1..4) ---
+
+// One row per in-app notification delivery. Rows are never deleted (history
+// is the point); readAt marks when the user dismissed it.
+model Notification {
+  id          String    @id @default(cuid())
+  recipientId String
+  recipient   User      @relation("UserNotifications", fields: [recipientId], references: [id], onDelete: Cascade)
+  type        String
+  title       String
+  body        String
+  deepLink    String?
+  readAt      DateTime?
+  createdAt   DateTime  @default(now())
+
+  @@index([recipientId, readAt, createdAt(sort: Desc)])
+  @@index([recipientId, createdAt(sort: Desc)])
+  @@map("notification")
+}
+
+// Per-user, per-channel, per-category opt-out preferences. Absent row = enabled
+// (opt-out model). Written on first explicit user change.
+model NotificationPreference {
+  id              String    @id @default(cuid())
+  userId          String
+  user            User      @relation("UserNotifPrefs", fields: [userId], references: [id], onDelete: Cascade)
+  channel         String    // "in_app" | "email" | "push"
+  eventCategory   String    // "task" | "report" | "mention"
+  isEnabled       Boolean   @default(true)
+  quietHoursStart Int?      // 0-23 inclusive, local time in timeZone
+  quietHoursEnd   Int?      // 0-23 inclusive; end < start = crosses midnight
+  timeZone        String    @default("UTC")
+  pauseUntil      DateTime?
+
+  @@unique([userId, channel, eventCategory])
+  @@index([userId])
+  @@map("notification_preference")
+}
+
+// W3C PushSubscription stored per browser. Self-pruning: stale subscriptions
+// (HTTP 410 from push service) are deleted by push.ts on first delivery failure.
+model PushSubscription {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation("UserPushSubs", fields: [userId], references: [id], onDelete: Cascade)
+  endpoint  String   @unique
+  auth      String
+  p256dh    String
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@map("push_subscription")
 }

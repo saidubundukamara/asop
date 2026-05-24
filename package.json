@@ -35,6 +35,7 @@
 		"@testing-library/jest-dom": "^6.9.1",
 		"@testing-library/svelte": "^5.3.1",
 		"@types/node": "^24",
+		"@types/web-push": "^3.6.4",
 		"@vitest/coverage-v8": "^4.1.7",
 		"@vitest/ui": "^4.1.7",
 		"bits-ui": "^2.18.1",
@@ -75,6 +76,8 @@
 		"better-auth": "^1.6.11",
 		"cloudinary": "^2.10.0",
 		"isomorphic-dompurify": "3.14.0",
+		"resend": "^6.12.3",
+		"web-push": "^3.6.7",
 		"zod": "^4.4.3"
 	}
 }
