@@ -6,6 +6,7 @@ import BellIcon from '@lucide/svelte/icons/bell';
 import UserIcon from '@lucide/svelte/icons/user';
 import UsersIcon from '@lucide/svelte/icons/users';
 import FileCogIcon from '@lucide/svelte/icons/file-cog';
+import Building2Icon from '@lucide/svelte/icons/building-2';
 
 export type NavItem = {
 	label: string;
@@ -34,6 +35,11 @@ export const primaryNav: NavItem[] = [
 //
 // Phase 3 splits this: only admin sees Task templates (FR-TASK-8); managers
 // still see Staff.
+const departmentsNav: NavItem = {
+	label: 'Departments',
+	href: '/admin/departments',
+	icon: Building2Icon
+};
 const staffNav: NavItem = { label: 'Staff', href: '/staff', icon: UsersIcon };
 const taskTemplatesNav: NavItem = {
 	label: 'Task templates',
@@ -46,7 +52,7 @@ const reportTemplatesNav: NavItem = {
 	icon: FileCogIcon
 };
 
-export const adminNav: NavItem[] = [staffNav, taskTemplatesNav, reportTemplatesNav];
+export const adminNav: NavItem[] = [departmentsNav, staffNav, taskTemplatesNav, reportTemplatesNav];
 export const managerNav: NavItem[] = [staffNav];
 
 export function secondaryNavForRole(role: Role | string | undefined): NavItem[] {
