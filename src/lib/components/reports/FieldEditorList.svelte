@@ -121,8 +121,8 @@
 			</div>
 
 			<div class="grid gap-2 sm:grid-cols-2">
-				<div>
-					<label class="mb-1 block text-xs font-medium">Label *</label>
+				<label class="block text-xs font-medium">
+					<span class="mb-1 block">Label *</span>
 					<input
 						type="text"
 						bind:value={fields[i].label}
@@ -131,9 +131,9 @@
 						placeholder="e.g. Beneficiary count"
 						class="w-full rounded-md border px-2 py-1.5 text-sm focus:ring-1 focus:ring-ring focus:outline-none"
 					/>
-				</div>
-				<div>
-					<label class="mb-1 block text-xs font-medium">Type</label>
+				</label>
+				<label class="block text-xs font-medium">
+					<span class="mb-1 block">Type</span>
 					<select
 						bind:value={fields[i].fieldType}
 						class="w-full rounded-md border px-2 py-1.5 text-sm focus:ring-1 focus:ring-ring focus:outline-none"
@@ -142,11 +142,11 @@
 							<option value={t.value}>{t.label}</option>
 						{/each}
 					</select>
-				</div>
+				</label>
 			</div>
 
-			<div class="mt-2">
-				<label class="mb-1 block text-xs font-medium">Help text</label>
+			<label class="mt-2 block text-xs font-medium">
+				<span class="mb-1 block">Help text</span>
 				<input
 					type="text"
 					bind:value={fields[i].helpText}
@@ -154,11 +154,11 @@
 					placeholder="Optional guidance for staff"
 					class="w-full rounded-md border px-2 py-1.5 text-sm focus:ring-1 focus:ring-ring focus:outline-none"
 				/>
-			</div>
+			</label>
 
 			{#if hasOptions(field.fieldType)}
-				<div class="mt-2">
-					<label class="mb-1 block text-xs font-medium">Options (one per line)</label>
+				<label class="mt-2 block text-xs font-medium">
+					<span class="mb-1 block">Options (one per line)</span>
 					<textarea
 						rows="3"
 						value={getOptionsText(field)}
@@ -166,7 +166,7 @@
 						placeholder="Option A&#10;Option B&#10;Option C"
 						class="w-full rounded-md border px-2 py-1.5 text-sm focus:ring-1 focus:ring-ring focus:outline-none"
 					></textarea>
-				</div>
+				</label>
 			{/if}
 
 			<div class="mt-2 flex items-center gap-2">
