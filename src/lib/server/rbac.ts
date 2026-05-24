@@ -74,7 +74,9 @@ export type Action =
 	// Phase 5 — notifications. All roles, own data only (enforced in load/action).
 	| 'notification.list'
 	| 'notification.mark_read'
-	| 'notification.preference_update';
+	| 'notification.preference_update'
+	// Phase 6 — attachments (FR-FILE-3).
+	| 'attachment.delete';
 
 export type Resource =
 	| { type: 'user'; id: string; departmentId: string | null | undefined; isSelf: boolean }
@@ -103,7 +105,14 @@ export type Resource =
 	| { type: 'report_template' }
 	// Phase 5 — notifications.
 	| { type: 'notification'; recipientId: string }
-	| { type: 'notification_list' };
+	| { type: 'notification_list' }
+	// Phase 6 — attachments.
+	| {
+			type: 'attachment';
+			uploadedById: string;
+			ownerType: string;
+			ownerDepartmentId: string | null;
+	  };
 
 export type DirectoryScope = 'all' | 'team' | 'self';
 
@@ -334,6 +343,21 @@ export function can(user: RbacUser, action: Action, resource: Resource): boolean
 		case 'notification.preference_update':
 			// Own preferences only — load/action enforce userId = actor.id.
 			return true;
+
+		// --- Attachments (FR-FILE-3) ---
+
+		case 'attachment.delete': {
+			if (resource.type !== 'attachment') return false;
+			// Admin can delete any attachment.
+			if (role === 'admin') return true;
+			// Uploader can remove their own attachment.
+			if (resource.uploadedById === user.id) return true;
+			// Manager can delete attachments belonging to their team's entities.
+			if (role === 'manager') {
+				return Boolean(user.departmentId) && user.departmentId === resource.ownerDepartmentId;
+			}
+			return false;
+		}
 
 		default: {
 			const _exhaustive: never = action;

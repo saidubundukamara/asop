@@ -40,6 +40,17 @@ export type SignedUploadParams = {
 	publicId?: string;
 };
 
+// Best-effort Cloudinary deletion (FR-FILE-3). Errors are logged but never
+// re-thrown — a failed delete must not block the UI response.
+export async function deleteCloudinaryAsset(publicId: string): Promise<void> {
+	try {
+		ensureConfigured();
+		await cloudinary.uploader.destroy(publicId);
+	} catch (err) {
+		console.error('[cloudinary] delete failed for', publicId, err);
+	}
+}
+
 export function signUploadParams(input: SignUploadInput): SignedUploadParams {
 	ensureConfigured();
 

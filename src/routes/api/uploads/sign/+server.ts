@@ -7,10 +7,14 @@ import type { RequestHandler } from './$types';
 // POST /api/uploads/sign — returns signed Cloudinary upload params for an
 // authenticated user. The browser uses these to PUT bytes directly to
 // *.cloudinary.com (no proxy through our origin). Folder is whitelisted to
-// prevent path injection; Phase 2 only allows 'profile-photos', Phase 6 will
-// add 'task-attachments', 'report-attachments', etc.
+// prevent path injection.
 
-const ALLOWED_FOLDERS = new Set(['profile-photos']);
+const ALLOWED_FOLDERS = new Set([
+	'profile-photos',
+	'task-attachments',
+	'report-attachments',
+	'comment-attachments'
+]);
 
 const bodySchema = z.object({
 	folder: z.string(),
@@ -34,10 +38,12 @@ export const POST: RequestHandler = async (event) => {
 		throw error(400, `Folder "${parsed.data.folder}" not allowed`);
 	}
 
-	// Scope publicId to the actor's user id so one user can't overwrite another's
-	// asset. Cloudinary upserts on (folder, public_id), so this also makes
-	// re-uploads idempotent — the old photo URL is replaced, not orphaned.
-	const publicId = parsed.data.publicId ?? `user-${user.id}`;
+	// Profile photos are scoped to user id so re-uploads replace (not orphan) the old asset.
+	// Attachment uploads use Cloudinary's auto-generated public_id instead.
+	const publicId =
+		parsed.data.folder === 'profile-photos'
+			? (parsed.data.publicId ?? `user-${user.id}`)
+			: parsed.data.publicId;
 
 	try {
 		const signed = signUploadParams({ folder: parsed.data.folder, publicId });

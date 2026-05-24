@@ -45,7 +45,9 @@ export type AuditAction =
 	// Phase 5 — notification preferences and push subscriptions.
 	| 'notification.preference_updated'
 	| 'push_subscription.registered'
-	| 'push_subscription.removed';
+	| 'push_subscription.removed'
+	// Phase 6 — attachments (FR-FILE-3: deletion is audited).
+	| 'attachment.deleted';
 
 export type AuditInput = {
 	actorId: string;
