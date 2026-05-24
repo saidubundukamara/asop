@@ -7,7 +7,7 @@
 	import MultiSelectField from './fields/MultiSelectField.svelte';
 	import CheckboxField from './fields/CheckboxField.svelte';
 	import GeolocationField from './fields/GeolocationField.svelte';
-	import FileFieldPlaceholder from './fields/FileFieldPlaceholder.svelte';
+	import FileField from './fields/FileField.svelte';
 
 	type ReportField = {
 		id: string;
@@ -24,12 +24,16 @@
 		fields,
 		values = $bindable({}),
 		issues = {},
-		readonly = false
+		readonly = false,
+		reportId = null,
+		canDeleteAttachment = false
 	}: {
 		fields: ReportField[];
 		values?: Record<string, unknown>;
 		issues?: Record<string, string[]>;
 		readonly?: boolean;
+		reportId?: string | null;
+		canDeleteAttachment?: boolean;
 	} = $props();
 
 	// Normalize existing values (from DB) into the bindable state.
@@ -169,11 +173,13 @@
 				error={fieldError}
 			/>
 		{:else if field.fieldType === 'file'}
-			<FileFieldPlaceholder
+			<FileField
 				label={field.label}
 				helpText={field.helpText ?? ''}
 				isRequired={field.isRequired}
 				{readonly}
+				{reportId}
+				canDelete={canDeleteAttachment}
 			/>
 		{/if}
 	{/each}

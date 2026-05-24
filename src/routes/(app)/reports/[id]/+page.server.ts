@@ -136,13 +136,35 @@ export const load: PageServerLoad = async (event) => {
 		canDelete: canDeleteReportComment(actor)
 	}));
 
+	const attachments = await prisma.attachment.findMany({
+		where: { ownerType: 'report', ownerId: report.id, deletedAt: null },
+		orderBy: { createdAt: 'asc' },
+		select: {
+			id: true,
+			originalFilename: true,
+			mimeType: true,
+			sizeBytes: true,
+			secureUrl: true,
+			cloudinaryPublicId: true,
+			uploadedById: true
+		}
+	});
+
+	const canDeleteAttachment = can(actor, 'attachment.delete', {
+		type: 'attachment',
+		uploadedById: actor.id,
+		ownerType: 'report',
+		ownerDepartmentId: report.template.departmentId
+	});
+
 	return {
 		report: {
 			...report,
 			comments: commentsWithFlags,
 			valuesByFieldId
 		},
-		capabilities: { canReview, canReopen, canEdit, canDelete, canComment },
+		attachments,
+		capabilities: { canReview, canReopen, canEdit, canDelete, canComment, canDeleteAttachment },
 		actor: { id: actor.id, role: actor.role }
 	};
 };

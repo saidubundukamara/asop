@@ -1,7 +1,6 @@
 <script lang="ts">
 	type NotifRow = {
 		id: string;
-		type: string;
 		title: string;
 		body: string;
 		deepLink: string | null;

@@ -6,7 +6,6 @@
 	import NotificationDropdown from './NotificationDropdown.svelte';
 
 	let unread = $state(0);
-	let open = $state(false);
 	let dropdown: ReturnType<typeof NotificationDropdown> | null = $state(null);
 
 	async function fetchCount() {
@@ -28,7 +27,6 @@
 	});
 
 	function handleOpen(isOpen: boolean) {
-		open = isOpen;
 		if (isOpen && dropdown) {
 			dropdown.load();
 		}

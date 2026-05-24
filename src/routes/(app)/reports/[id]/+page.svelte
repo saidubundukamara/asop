@@ -7,6 +7,7 @@
 	import ReviewActions from '$lib/components/reports/ReviewActions.svelte';
 	import CommentThread from '$lib/components/reports/CommentThread.svelte';
 	import CommentForm from '$lib/components/reports/CommentForm.svelte';
+	import FileDropzone from '$lib/components/forms/FileDropzone.svelte';
 	import type { PageData, ActionData } from './$types';
 
 	let { data, form }: { data: PageData; form: ActionData } = $props();
@@ -108,8 +109,23 @@
 			values={report.valuesByFieldId}
 			issues={{}}
 			readonly={true}
+			reportId={report.id}
+			canDeleteAttachment={caps.canDeleteAttachment}
 		/>
 	</div>
+
+	<!-- Attachments -->
+	<section class="mt-6 mb-4">
+		<h2 class="mb-2 text-base font-semibold">Attachments</h2>
+		<FileDropzone
+			ownerType="report"
+			ownerId={report.id}
+			folder="report-attachments"
+			existingAttachments={data.attachments}
+			canDelete={caps.canDeleteAttachment}
+			readonly={report.status === 'approved'}
+		/>
+	</section>
 
 	<!-- Review actions (for reviewers on submitted/under_review reports) -->
 	{#if caps.canReview && (report.status === 'submitted' || report.status === 'under_review')}
