@@ -50,4 +50,24 @@ describe('audit()', () => {
 		expect(call.data.beforeJson).toBe(Prisma.JsonNull);
 		expect(call.data.afterJson).toBe(Prisma.JsonNull);
 	});
+
+	it('accepts actorId: null for system / unauthenticated-flow rows', async () => {
+		const { create, tx } = makeTx();
+		await audit(tx, {
+			actorId: null,
+			action: 'auth.sign_in_failure',
+			target: { type: 'auth.signin', id: 'user@example.com' }
+		});
+
+		expect(create).toHaveBeenCalledWith({
+			data: {
+				actorId: null,
+				action: 'auth.sign_in_failure',
+				targetType: 'auth.signin',
+				targetId: 'user@example.com',
+				beforeJson: Prisma.JsonNull,
+				afterJson: Prisma.JsonNull
+			}
+		});
+	});
 });
