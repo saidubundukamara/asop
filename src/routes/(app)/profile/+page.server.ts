@@ -2,6 +2,7 @@ import { z } from 'zod';
 import { requireUser } from '$lib/server/auth/guards';
 import { withAction } from '$lib/server/actions';
 import { audit } from '$lib/server/audit';
+import { auth } from '$lib/server/auth';
 import { prisma } from '$lib/server/db';
 import { TIMEZONES } from '$lib/timezones';
 import type { Actions, PageServerLoad } from './$types';
@@ -208,5 +209,22 @@ export const actions: Actions = {
 		});
 
 		return { ok: true, data: { photoUrl: input.secureUrl } };
-	})
+	}),
+
+	// FR-AUTH-4: "Sign out everywhere" revokes every other session belonging to
+	// the actor (the current session is preserved so the page can reload). Audited
+	// per FR-AUDIT-1 — a separate action from `user.deactivated` because this is
+	// user-initiated and the account stays active.
+	signOutEverywhere: async (event) => {
+		const actor = requireUser(event);
+		await auth.api.revokeOtherSessions({ headers: event.request.headers });
+		await prisma.$transaction((tx) =>
+			audit(tx, {
+				actorId: actor.id,
+				action: 'user.signed_out_everywhere',
+				target: { type: 'user', id: actor.id }
+			})
+		);
+		return { ok: true };
+	}
 };

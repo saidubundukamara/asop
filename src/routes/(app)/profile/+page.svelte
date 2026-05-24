@@ -15,6 +15,7 @@
 	const departmentLabel = $derived(profile.department?.name ?? '—');
 
 	let savingProfile = $state(false);
+	let signingOutOthers = $state(false);
 
 	// Notification preferences helpers
 	const channels = ['in_app', 'email', 'push'] as const;
@@ -215,6 +216,34 @@
 						{savingProfile ? 'Saving…' : 'Save changes'}
 					</Button>
 				</div>
+			</form>
+		</Card.Content>
+	</Card.Root>
+
+	<Card.Root>
+		<Card.Header>
+			<Card.Title>Security</Card.Title>
+			<Card.Description>
+				Sign out of every other browser or device you're signed in on. This session stays active.
+			</Card.Description>
+		</Card.Header>
+		<Card.Content>
+			<form
+				method="POST"
+				action="?/signOutEverywhere"
+				use:enhance={() => {
+					signingOutOthers = true;
+					return async ({ result, update }) => {
+						await update();
+						signingOutOthers = false;
+						if (result.type === 'success') toast.success('Signed out of all other devices');
+						else toast.error('Could not sign out other devices');
+					};
+				}}
+			>
+				<Button type="submit" variant="outline" disabled={signingOutOthers}>
+					{signingOutOthers ? 'Signing out…' : 'Sign out of all other devices'}
+				</Button>
 			</form>
 		</Card.Content>
 	</Card.Root>
