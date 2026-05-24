@@ -8,6 +8,8 @@ import { can, directoryScope } from '$lib/server/rbac';
 import { canTransition, allowedTransitions } from '$lib/server/tasks/transitions';
 import { canEditComment, canDeleteComment, parseMentions } from '$lib/server/tasks/comments';
 import { sanitizeRichTextCapped } from '$lib/server/sanitize';
+import { notify } from '$lib/server/notify';
+import { NOTIFICATION_TYPES } from '$lib/server/notifications/types';
 import type { Actions, PageServerLoad } from './$types';
 
 // FR-TASK-5 — task detail. All field/status/comment mutations live here.
@@ -260,7 +262,19 @@ export const actions: Actions = {
 			});
 		});
 
-		// TODO(Phase 5): notify({ recipientId: assignerId, type: 'task.status_changed', ... })
+		// Notify relevant parties about the status change — fire-and-forget.
+		const notifyTargets = new Set<string>();
+		if (before.assignerId && before.assignerId !== actor.id) notifyTargets.add(before.assignerId);
+		if (before.assigneeId !== actor.id) notifyTargets.add(before.assigneeId);
+		for (const recipientId of notifyTargets) {
+			notify({
+				recipientId,
+				type: NOTIFICATION_TYPES.TASK_STATUS_CHANGED,
+				title: 'Task status updated',
+				body: `Status changed to ${input.to.replace('_', ' ')}`,
+				deepLink: `/tasks/${id}`
+			}).catch(() => {});
+		}
 		return { ok: true, data: { id, to: input.to } };
 	}),
 
@@ -399,7 +413,25 @@ export const actions: Actions = {
 			});
 		});
 
-		// TODO(Phase 5): notify new assignee + old assignee
+		// Notify new assignee and the old one — fire-and-forget.
+		if (newAssignee.id !== actor.id) {
+			notify({
+				recipientId: newAssignee.id,
+				type: NOTIFICATION_TYPES.TASK_ASSIGNED,
+				title: 'Task reassigned to you',
+				body: 'A task has been assigned to you',
+				deepLink: `/tasks/${id}`
+			}).catch(() => {});
+		}
+		if (before.assigneeId !== actor.id && before.assigneeId !== newAssignee.id) {
+			notify({
+				recipientId: before.assigneeId,
+				type: NOTIFICATION_TYPES.TASK_STATUS_CHANGED,
+				title: 'Task reassigned',
+				body: `Task was reassigned to ${newAssignee.name}`,
+				deepLink: `/tasks/${id}`
+			}).catch(() => {});
+		}
 		return { ok: true, data: { id, assigneeId: newAssignee.id } };
 	}),
 
@@ -491,6 +523,31 @@ export const actions: Actions = {
 			},
 			select: { id: true }
 		});
+
+		// Notify assignee (if not the commenter) and all mentioned users — fire-and-forget.
+		const notified = new Set<string>([actor.id]);
+		if (!notified.has(taskScope.assigneeId)) {
+			notified.add(taskScope.assigneeId);
+			notify({
+				recipientId: taskScope.assigneeId,
+				type: NOTIFICATION_TYPES.TASK_COMMENT,
+				title: 'New comment on your task',
+				body: input.body.replace(/<[^>]+>/g, '').slice(0, 120),
+				deepLink: `/tasks/${id}`
+			}).catch(() => {});
+		}
+		for (const uid of mentionedUserIds) {
+			if (!notified.has(uid)) {
+				notified.add(uid);
+				notify({
+					recipientId: uid,
+					type: NOTIFICATION_TYPES.TASK_MENTION,
+					title: 'You were mentioned in a task',
+					body: input.body.replace(/<[^>]+>/g, '').slice(0, 120),
+					deepLink: `/tasks/${id}`
+				}).catch(() => {});
+			}
+		}
 
 		// FR-AUDIT-1 does not list comment creates; no audit entry.
 		return { ok: true, data: { id: created.id } };

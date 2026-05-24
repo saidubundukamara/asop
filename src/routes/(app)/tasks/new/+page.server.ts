@@ -6,6 +6,8 @@ import { withAction } from '$lib/server/actions';
 import { audit } from '$lib/server/audit';
 import { directoryScope } from '$lib/server/rbac';
 import { sanitizeRichTextCapped } from '$lib/server/sanitize';
+import { notify } from '$lib/server/notify';
+import { NOTIFICATION_TYPES } from '$lib/server/notifications/types';
 import type { Actions, PageServerLoad } from './$types';
 
 // FR-TASK-1 — create a task.
@@ -150,7 +152,16 @@ export const actions: Actions = {
 			return task;
 		});
 
-		// TODO(Phase 5): notify({ recipientId: assignee.id, type: 'task.assigned', payload: { taskId } })
+		// Notify assignee — fire-and-forget, never blocks the response.
+		if (assignee.id !== actor.id) {
+			notify({
+				recipientId: assignee.id,
+				type: NOTIFICATION_TYPES.TASK_ASSIGNED,
+				title: 'New task assigned',
+				body: input.title,
+				deepLink: `/tasks/${created.id}`
+			}).catch(() => {});
+		}
 		return { ok: true, data: { id: created.id } };
 	})
 };

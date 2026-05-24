@@ -4,6 +4,8 @@ import { prisma } from '$lib/server/db';
 import { requireUser, requireCan } from '$lib/server/auth/guards';
 import { withAction } from '$lib/server/actions';
 import { directoryScope } from '$lib/server/rbac';
+import { notify } from '$lib/server/notify';
+import { NOTIFICATION_TYPES } from '$lib/server/notifications/types';
 import type { Actions, PageServerLoad } from './$types';
 
 // FR-REP-1 / FR-REP-3 — create a new report draft + auto-save + submit.
@@ -202,7 +204,9 @@ export const actions: Actions = {
 				template: {
 					select: {
 						id: true,
+						name: true,
 						departmentId: true,
+						reviewerRole: true,
 						fields: { where: { isRequired: true }, select: { id: true, label: true } }
 					}
 				}
@@ -252,6 +256,31 @@ export const actions: Actions = {
 			where: { id: report.id },
 			data: { status: 'submitted', submittedAt: new Date() }
 		});
+
+		// Notify reviewers — fire-and-forget.
+		const reviewerWhere =
+			report.template.reviewerRole === 'admin'
+				? { role: 'admin', isActive: true }
+				: {
+						role: 'manager',
+						isActive: true,
+						departmentId: report.template.departmentId ?? undefined
+					};
+		const reviewers = await prisma.user.findMany({
+			where: reviewerWhere,
+			select: { id: true }
+		});
+		for (const reviewer of reviewers) {
+			if (reviewer.id !== actor.id) {
+				notify({
+					recipientId: reviewer.id,
+					type: NOTIFICATION_TYPES.REPORT_SUBMITTED,
+					title: 'Report submitted for review',
+					body: `${report.template.name} — submitted by ${actor.name ?? actor.email}`,
+					deepLink: `/reports/${report.id}`
+				}).catch(() => {});
+			}
+		}
 
 		redirect(303, `/reports/${report.id}`);
 	})

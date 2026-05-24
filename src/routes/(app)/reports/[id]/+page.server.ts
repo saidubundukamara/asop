@@ -11,6 +11,8 @@ import {
 	canDeleteReportComment,
 	parseMentions
 } from '$lib/server/reports/comments';
+import { notify } from '$lib/server/notify';
+import { NOTIFICATION_TYPES } from '$lib/server/notifications/types';
 import type { Actions, PageServerLoad } from './$types';
 
 // FR-REP-4 / FR-REP-8 — report detail + review workflow + comments.
@@ -241,6 +243,24 @@ export const actions: Actions = {
 			}
 		});
 
+		// Notify the report author of the review outcome — fire-and-forget.
+		if (report.authorId !== actor.id) {
+			const notifType =
+				toStatus === 'approved'
+					? NOTIFICATION_TYPES.REPORT_APPROVED
+					: NOTIFICATION_TYPES.REPORT_NEEDS_REVISION;
+			notify({
+				recipientId: report.authorId,
+				type: notifType,
+				title: toStatus === 'approved' ? 'Report approved' : 'Report needs revision',
+				body:
+					toStatus === 'approved'
+						? 'Your report has been approved.'
+						: input.comment?.trim() || 'Your report needs revision.',
+				deepLink: `/reports/${input.reportId}`
+			}).catch(() => {});
+		}
+
 		return { ok: true, data: { status: toStatus } };
 	}),
 
@@ -306,15 +326,42 @@ export const actions: Actions = {
 					})
 				: [];
 
+		const mentionedUserIds = mentionedUsers.map((u) => u.id);
+
 		const comment = await prisma.reportComment.create({
 			data: {
 				reportId: report.id,
 				authorId: actor.id,
 				body: input.body,
-				mentionedUserIds: mentionedUsers.map((u) => u.id)
+				mentionedUserIds
 			},
 			select: { id: true }
 		});
+
+		// Notify report author and mentioned users — fire-and-forget.
+		const notified = new Set<string>([actor.id]);
+		if (!notified.has(report.authorId)) {
+			notified.add(report.authorId);
+			notify({
+				recipientId: report.authorId,
+				type: NOTIFICATION_TYPES.REPORT_COMMENT,
+				title: 'New comment on your report',
+				body: input.body.replace(/<[^>]+>/g, '').slice(0, 120),
+				deepLink: `/reports/${report.id}`
+			}).catch(() => {});
+		}
+		for (const uid of mentionedUserIds) {
+			if (!notified.has(uid)) {
+				notified.add(uid);
+				notify({
+					recipientId: uid,
+					type: NOTIFICATION_TYPES.REPORT_MENTION,
+					title: 'You were mentioned in a report',
+					body: input.body.replace(/<[^>]+>/g, '').slice(0, 120),
+					deepLink: `/reports/${report.id}`
+				}).catch(() => {});
+			}
+		}
 
 		return { ok: true, data: { commentId: comment.id } };
 	}),
