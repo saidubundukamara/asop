@@ -49,6 +49,10 @@ export const AUDIT_ACTIONS = [
 	'push_subscription.removed',
 	// Phase 6 — attachments (FR-FILE-3: deletion is audited).
 	'attachment.deleted',
+	// Department management.
+	'department.created',
+	'department.updated',
+	'department.deleted',
 	// Phase 9 — unauthenticated-flow security events. `actorId` is null on
 	// these rows; the target carries the inferred subject (email for sign-in /
 	// forgot, a hashed token for invite).

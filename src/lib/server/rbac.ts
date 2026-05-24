@@ -76,7 +76,11 @@ export type Action =
 	| 'notification.mark_read'
 	| 'notification.preference_update'
 	// Phase 6 — attachments (FR-FILE-3).
-	| 'attachment.delete';
+	| 'attachment.delete'
+	// Department management — admin-only CRUD.
+	| 'department.create'
+	| 'department.update'
+	| 'department.delete';
 
 export type Resource =
 	| { type: 'user'; id: string; departmentId: string | null | undefined; isSelf: boolean }
@@ -112,7 +116,8 @@ export type Resource =
 			uploadedById: string;
 			ownerType: string;
 			ownerDepartmentId: string | null;
-	  };
+	  }
+	| { type: 'department' };
 
 export type DirectoryScope = 'all' | 'team' | 'self';
 
@@ -358,6 +363,13 @@ export function can(user: RbacUser, action: Action, resource: Resource): boolean
 			}
 			return false;
 		}
+
+		// --- Departments (admin-only CRUD) ---
+
+		case 'department.create':
+		case 'department.update':
+		case 'department.delete':
+			return role === 'admin';
 
 		default: {
 			const _exhaustive: never = action;
