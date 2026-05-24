@@ -2,6 +2,8 @@ import { fail, redirect } from '@sveltejs/kit';
 import { z } from 'zod';
 import { APIError } from 'better-auth/api';
 import { auth } from '$lib/server/auth';
+import { audit } from '$lib/server/audit';
+import { prisma } from '$lib/server/db';
 import type { Actions, PageServerLoad } from './$types';
 
 const SignInSchema = z.object({
@@ -46,6 +48,16 @@ export const actions: Actions = {
 				// 429 from the rate-limit plugin gets its own message; everything
 				// else collapses to the generic credential error.
 				if (err.statusCode === 429) {
+					// Phase 9 / FR-AUDIT-1: record rate-limit hits so admins can spot
+					// brute-force attempts in /admin/audit. actorId is null because the
+					// request never authenticated; the target carries the attempted email.
+					await prisma.$transaction((tx) =>
+						audit(tx, {
+							actorId: null,
+							action: 'auth.sign_in_failure',
+							target: { type: 'auth.signin', id: parsed.data.email }
+						})
+					);
 					return fail(429, {
 						email: raw.email,
 						message: 'Too many sign-in attempts. Try again in a few minutes.'

@@ -1,8 +1,11 @@
+import { createHash } from 'node:crypto';
 import { fail, redirect } from '@sveltejs/kit';
 import { z } from 'zod';
 import { APIError } from 'better-auth/api';
 import { auth } from '$lib/server/auth';
+import { audit } from '$lib/server/audit';
 import { checkPasswordPolicy, passwordPolicyMessage } from '$lib/server/auth/password-policy';
+import { prisma } from '$lib/server/db';
 import type { Actions, PageServerLoad } from './$types';
 
 // The invite flow piggybacks on Better Auth's password-reset token: the seed
@@ -49,6 +52,18 @@ export const actions: Actions = {
 		} catch (err) {
 			if (err instanceof APIError) {
 				if (err.statusCode === 429) {
+					// Phase 9 / FR-AUDIT-1: record rate-limit hits on the invite path.
+					// The raw token is sensitive (single-use credential) so we log only
+					// a SHA-256 hash — enough to correlate repeated attempts against
+					// the same invite without exposing the token itself.
+					const tokenHash = createHash('sha256').update(parsed.data.token).digest('hex');
+					await prisma.$transaction((tx) =>
+						audit(tx, {
+							actorId: null,
+							action: 'auth.invite_throttled',
+							target: { type: 'auth.invite', id: tokenHash }
+						})
+					);
 					return fail(429, { message: 'Too many attempts. Try again in a few minutes.' });
 				}
 				return fail(400, {

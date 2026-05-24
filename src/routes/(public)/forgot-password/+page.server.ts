@@ -2,6 +2,8 @@ import { fail } from '@sveltejs/kit';
 import { z } from 'zod';
 import { APIError } from 'better-auth/api';
 import { auth } from '$lib/server/auth';
+import { audit } from '$lib/server/audit';
+import { prisma } from '$lib/server/db';
 import type { Actions } from './$types';
 
 const ForgotSchema = z.object({
@@ -27,6 +29,16 @@ export const actions: Actions = {
 			});
 		} catch (err) {
 			if (err instanceof APIError && err.statusCode === 429) {
+				// Phase 9 / FR-AUDIT-1: record rate-limit hits even though the response
+				// itself stays generic for enumeration protection. The audit row carries
+				// the attempted email so admins can see who's being targeted.
+				await prisma.$transaction((tx) =>
+					audit(tx, {
+						actorId: null,
+						action: 'auth.forgot_password_throttled',
+						target: { type: 'auth.forgot', id: parsed.data.email }
+					})
+				);
 				return fail(429, {
 					email: raw.email,
 					message: 'Too many requests. Try again in a few minutes.'
