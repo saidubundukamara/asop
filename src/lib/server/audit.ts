@@ -33,7 +33,15 @@ export type AuditAction =
 	| 'task_template.created'
 	| 'task_template.updated'
 	| 'task_template.archived'
-	| 'task_template.unarchived';
+	| 'task_template.unarchived'
+	// Phase 4 — reports. Only the destructive / irreversible actions are audited
+	// per FR-AUDIT-1 (review/approve are not listed there; delete and reopen are).
+	| 'report.deleted'
+	| 'report.reopened'
+	| 'report.comment_deleted'
+	| 'report_template.created'
+	| 'report_template.updated'
+	| 'report_template.archived';
 
 export type AuditInput = {
 	actorId: string;

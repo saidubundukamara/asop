@@ -48,7 +48,29 @@ export type Action =
 	| 'task_template.read'
 	| 'task_template.create'
 	| 'task_template.update'
-	| 'task_template.archive';
+	| 'task_template.archive'
+	// Phase 4 — reports (FR-REP-1..9).
+	| 'report.list'
+	| 'report.read'
+	| 'report.create'
+	// Author updates their own draft; admin can always edit.
+	| 'report.update_fields'
+	// Transition draft → submitted.
+	| 'report.submit'
+	// Approve or request revision (manager same dept, or admin).
+	| 'report.review'
+	// Admin-only: reopen an approved report back to submitted.
+	| 'report.reopen'
+	| 'report.delete'
+	| 'report.comment.create'
+	| 'report.comment.edit'
+	| 'report.comment.delete'
+	// Phase 4 — report templates. Admin manages; everyone reads.
+	| 'report_template.list'
+	| 'report_template.read'
+	| 'report_template.create'
+	| 'report_template.update'
+	| 'report_template.archive';
 
 export type Resource =
 	| { type: 'user'; id: string; departmentId: string | null | undefined; isSelf: boolean }
@@ -63,7 +85,18 @@ export type Resource =
 	  }
 	| { type: 'task_list' }
 	| { type: 'task_comment'; authorId: string | null }
-	| { type: 'task_template'; isArchived?: boolean };
+	| { type: 'task_template'; isArchived?: boolean }
+	// Phase 4 resources.
+	| {
+			type: 'report';
+			authorId: string;
+			// departmentId comes from the template; null means no dept restriction.
+			departmentId: string | null;
+			status: string;
+	  }
+	| { type: 'report_list' }
+	| { type: 'report_comment'; authorId: string | null }
+	| { type: 'report_template' };
 
 export type DirectoryScope = 'all' | 'team' | 'self';
 
@@ -202,6 +235,82 @@ export function can(user: RbacUser, action: Action, resource: Resource): boolean
 		case 'task_template.create':
 		case 'task_template.update':
 		case 'task_template.archive':
+			return role === 'admin';
+
+		// --- Reports (FR-REP-1..9, PRD § 12) ---
+
+		case 'report.list':
+			// All roles can reach the list page; the load function narrows results.
+			return true;
+
+		case 'report.read': {
+			if (resource.type !== 'report') return false;
+			if (role === 'admin') return true;
+			if (resource.authorId === user.id) return true;
+			if (role === 'manager') {
+				// Manager sees reports in their department (via the template dept).
+				return Boolean(user.departmentId) && user.departmentId === resource.departmentId;
+			}
+			return false;
+		}
+
+		case 'report.create':
+			// All roles can submit reports.
+			return true;
+
+		case 'report.update_fields': {
+			if (resource.type !== 'report') return false;
+			// Only drafts are editable; admin can always touch any draft.
+			if (resource.status !== 'draft') return role === 'admin';
+			if (role === 'admin') return true;
+			return resource.authorId === user.id;
+		}
+
+		case 'report.submit': {
+			if (resource.type !== 'report') return false;
+			if (resource.status !== 'draft' && resource.status !== 'needs_revision') return false;
+			if (role === 'admin') return true;
+			return resource.authorId === user.id;
+		}
+
+		case 'report.review': {
+			// Approve or request-revision. Not the author's call.
+			if (resource.type !== 'report') return false;
+			if (role === 'admin') return true;
+			if (role === 'manager') {
+				return Boolean(user.departmentId) && user.departmentId === resource.departmentId;
+			}
+			return false;
+		}
+
+		case 'report.reopen':
+			// Admin-only: move approved → submitted.
+			return role === 'admin';
+
+		case 'report.delete':
+			return role === 'admin';
+
+		case 'report.comment.create':
+			// Anyone with read access to the parent report can comment.
+			return true;
+
+		case 'report.comment.edit': {
+			if (resource.type !== 'report_comment') return false;
+			return resource.authorId === user.id;
+		}
+
+		case 'report.comment.delete':
+			return role === 'admin';
+
+		// --- Report templates (FR-REP-5) ---
+
+		case 'report_template.list':
+		case 'report_template.read':
+			return true;
+
+		case 'report_template.create':
+		case 'report_template.update':
+		case 'report_template.archive':
 			return role === 'admin';
 
 		default: {
