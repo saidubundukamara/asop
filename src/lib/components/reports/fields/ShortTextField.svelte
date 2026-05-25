@@ -21,9 +21,11 @@
 		error?: string;
 	} = $props();
 
-	const maxLength = configJson?.max ?? 500;
+	const maxLength = $derived(configJson?.max ?? 500);
 
-	if (!value && defaultValue) value = defaultValue;
+	$effect(() => {
+		if (!value && defaultValue) value = defaultValue;
+	});
 </script>
 
 <div class="space-y-1">

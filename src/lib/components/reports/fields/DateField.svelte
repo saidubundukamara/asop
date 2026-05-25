@@ -19,7 +19,7 @@
 		error?: string;
 	} = $props();
 
-	const inputType = fieldType === 'datetime' ? 'datetime-local' : 'date';
+	const inputType = $derived(fieldType === 'datetime' ? 'datetime-local' : 'date');
 </script>
 
 <div class="space-y-1">

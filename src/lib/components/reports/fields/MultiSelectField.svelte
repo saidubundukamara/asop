@@ -19,7 +19,7 @@
 		error?: string;
 	} = $props();
 
-	const options = configJson?.options ?? [];
+	const options = $derived(configJson?.options ?? []);
 
 	function toggle(opt: string) {
 		if (value.includes(opt)) {

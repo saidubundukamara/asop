@@ -21,7 +21,9 @@
 		error?: string;
 	} = $props();
 
-	if (value === '' && defaultValue) value = defaultValue;
+	$effect(() => {
+		if (value === '' && defaultValue) value = defaultValue;
+	});
 </script>
 
 <div class="space-y-1">

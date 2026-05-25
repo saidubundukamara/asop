@@ -21,8 +21,10 @@
 		error?: string;
 	} = $props();
 
-	const options = configJson?.options ?? [];
-	if (!value && defaultValue) value = defaultValue;
+	const options = $derived(configJson?.options ?? []);
+	$effect(() => {
+		if (!value && defaultValue) value = defaultValue;
+	});
 </script>
 
 <div class="space-y-1">
