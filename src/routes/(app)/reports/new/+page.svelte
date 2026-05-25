@@ -10,10 +10,11 @@
 	import { saveDraft as idbSaveDraft, getDraft, deleteDraft } from '$lib/client/idb-drafts';
 	import { enqueueSubmission } from '$lib/client/submission-queue';
 	import type { PageData, ActionData } from './$types';
+	import { untrack } from 'svelte';
 
 	let { data, form }: { data: PageData; form: ActionData } = $props();
 
-	let selectedTemplate = $state(data.preselected);
+	let selectedTemplate = $state(untrack(() => data.preselected));
 	let reportId = $state<string | null>(null);
 	let fieldValues = $state<Record<string, unknown>>({});
 	let lastSaved = $state<Date | null>(null);

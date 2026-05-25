@@ -4,25 +4,28 @@
 	import { Button } from '$lib/components/ui/button';
 	import FieldEditorList from '$lib/components/reports/FieldEditorList.svelte';
 	import type { PageData, ActionData } from './$types';
+	import { untrack } from 'svelte';
 
 	let { data, form }: { data: PageData; form: ActionData } = $props();
 
 	const tpl = $derived(data.tpl);
 	// Coerce nullable Prisma fields to the empty strings FieldEditorList expects.
 	let fields = $state(
-		structuredClone(
-			tpl.fields.map((f) => ({
-				...f,
-				helpText: f.helpText ?? '',
-				configJson: f.configJson ? JSON.stringify(f.configJson) : '',
-				defaultValue: f.defaultValue ?? ''
-			}))
+		untrack(() =>
+			structuredClone(
+				tpl.fields.map((f) => ({
+					...f,
+					helpText: f.helpText ?? '',
+					configJson: f.configJson ? JSON.stringify(f.configJson) : '',
+					defaultValue: f.defaultValue ?? ''
+				}))
+			)
 		)
 	);
-	let name = $state(tpl.name);
-	let description = $state(tpl.description ?? '');
-	let departmentId = $state(tpl.department?.id ?? '');
-	let reviewerRole = $state(tpl.reviewerRole as 'manager' | 'admin');
+	let name = $state(untrack(() => tpl.name));
+	let description = $state(untrack(() => tpl.description ?? ''));
+	let departmentId = $state(untrack(() => tpl.department?.id ?? ''));
+	let reviewerRole = $state(untrack(() => tpl.reviewerRole as 'manager' | 'admin'));
 
 	let saving = $state(false);
 

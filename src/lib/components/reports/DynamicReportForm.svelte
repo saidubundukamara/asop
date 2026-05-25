@@ -8,6 +8,7 @@
 	import CheckboxField from './fields/CheckboxField.svelte';
 	import GeolocationField from './fields/GeolocationField.svelte';
 	import FileField from './fields/FileField.svelte';
+	import { untrack } from 'svelte';
 
 	type ReportField = {
 		id: string;
@@ -68,7 +69,7 @@
 
 	// Initialise mutable state keyed by fieldId.
 	let localValues = $state<Record<string, unknown>>(
-		Object.fromEntries(fields.map((f) => [f.id, getInitial(f)]))
+		untrack(() => Object.fromEntries(fields.map((f) => [f.id, getInitial(f)])))
 	);
 
 	// Keep parent's `values` in sync so the autosave can read it.
