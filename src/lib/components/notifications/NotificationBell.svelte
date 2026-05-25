@@ -50,7 +50,7 @@
 			</Button>
 		{/snippet}
 	</DropdownMenu.Trigger>
-	<DropdownMenu.Content align="end" class="p-0">
+	<DropdownMenu.Content align="end" class="w-80 max-w-[calc(100vw-0.5rem)] p-0">
 		<NotificationDropdown bind:this={dropdown} />
 	</DropdownMenu.Content>
 </DropdownMenu.Root>

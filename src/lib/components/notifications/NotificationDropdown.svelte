@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { onMount } from 'svelte';
 	import { invalidateAll } from '$app/navigation';
 	import NotificationItem from './NotificationItem.svelte';
 
@@ -46,9 +47,13 @@
 	}
 
 	const hasUnread = $derived(items.some((n) => !n.readAt));
+
+	onMount(() => {
+		load();
+	});
 </script>
 
-<div class="flex w-80 flex-col">
+<div class="flex flex-col">
 	<div class="flex items-center justify-between border-b px-4 py-2">
 		<span class="text-sm font-semibold">Notifications</span>
 		{#if hasUnread}
